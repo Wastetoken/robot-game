@@ -715,10 +715,20 @@ function updateProjectiles(delta) {
       camera.updateProjectionMatrix();
 
       // Emit swirling charge particles at muzzle
-      const mw = _tempV1;
-      if (muzzlePoint) {
-        muzzlePoint.getWorldPosition(mw);
         emitChargeParticles(mw.x, mw.y, mw.z, chargeT);
+      }
+
+      // Auto-fire at full charge
+      if (chargeT >= 1.0) {
+        spawnProjectile(1.0);
+        mouseDownTime = null; 
+        isCharging = false;
+        if (sfx.charge.isPlaying) sfx.charge.stop();
+        chargeVFX.visible = false;
+        chargeLight.intensity = 0;
+        chargeBar.style.display = 'none';
+        camera.fov = BASE_FOV;
+        camera.updateProjectionMatrix();
       }
     }
   }
