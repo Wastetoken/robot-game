@@ -1168,9 +1168,9 @@ function animate() {
 
     if (isMoving) {
       const moveDir = new THREE.Vector3(playerVelocity.x, 0, playerVelocity.z).normalize();
-      targetAngle = Math.atan2(moveDir.x, moveDir.z) + Math.PI;
+      targetAngle = Math.atan2(moveDir.x, moveDir.z);
     } else {
-      targetAngle = yaw + Math.PI;
+      targetAngle = yaw;
     }
 
     const diff = ((targetAngle - curAngle + Math.PI) % (Math.PI * 2)) - Math.PI;
