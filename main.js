@@ -967,13 +967,6 @@ function updatePhysics(delta) {
       } else {
         if (sfx.jetpack.isPlaying) sfx.jetpack.stop();
       }
-
-      // Servo (Mouse rotation while still)
-      if (!isMoving && playerOnFloor && isMouseMoving) {
-        if (!sfx.servo.isPlaying) sfx.servo.play();
-      } else {
-        if (sfx.servo.isPlaying) sfx.servo.stop();
-      }
     }
 
     // Collision Sweep
@@ -1176,6 +1169,31 @@ function animate() {
     setShieldReveal(1.0); 
   }
   updateShield(delta);
+
+  // ── Robot Orientation & Servo Sound ─────────────────────────────────────
+  if (robotModel) {
+    const isMoving = playerVelocity.lengthSq() > 0.05;
+    const curAngle = robotModel.rotation.y;
+    let targetAngle = curAngle;
+
+    if (isMoving) {
+      const moveDir = new THREE.Vector3(playerVelocity.x, 0, playerVelocity.z).normalize();
+      targetAngle = Math.atan2(moveDir.x, moveDir.z) + Math.PI;
+    } else {
+      targetAngle = yaw + Math.PI;
+    }
+
+    const diff = ((targetAngle - curAngle + Math.PI) % (Math.PI * 2)) - Math.PI;
+    const lerpFactor = isMoving ? (1 - Math.exp(-12 * delta)) : (1 - Math.exp(-8 * delta));
+    robotModel.rotation.y += diff * lerpFactor;
+
+    // Servo sound: only when standing still and actually turning
+    if (!isMoving && playerOnFloor && Math.abs(diff) > 0.01 && isMouseMoving) {
+      if (!sfx.servo.isPlaying) sfx.servo.play();
+    } else {
+      if (sfx.servo.isPlaying) sfx.servo.stop();
+    }
+  }
 
   // ── Procedural bone poses ───────────────────────────────────────────────
   if (robotModel && robotBones.body) {
