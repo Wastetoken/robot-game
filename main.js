@@ -574,8 +574,9 @@ const particleMat = new THREE.ShaderMaterial({
     varying float vLife;
     varying vec3 vColor;
     void main() {
-      vec4 tex = texture2D(uTex, gl_PointCoord);
-      gl_FragColor = vec4(vColor, vLife * tex.a);
+      float a = texture2D(uTex, gl_PointCoord).r;
+      // Multiply color by 80.0 to force it past ACES ToneMapping and trigger Bloom
+      gl_FragColor = vec4(vColor * 80.0, vLife * a);
     }
   `
 });
