@@ -13,8 +13,8 @@ THREE.Mesh.prototype.raycast = acceleratedRaycast;
 
 // ─── Renderer ─────────────────────────────────────────────────────────────
 const scene = new THREE.Scene();
-scene.background = new THREE.Color(0xd4e3f0);
-scene.fog = new THREE.FogExp2(0xe6d1b3, 0.001); // Light desert haze
+scene.background = new THREE.Color(0xB5F8FF);
+scene.fog = new THREE.FogExp2(0xe6d1b3, 0.01); // Light desert haze
 
 const camera = new THREE.PerspectiveCamera(75, innerWidth / innerHeight, 0.1, 1000);
 camera.layers.enable(1); // Projectiles / VFX
@@ -27,15 +27,15 @@ renderer.shadowMap.enabled = true;
 renderer.shadowMap.type = THREE.PCFSoftShadowMap;
 renderer.outputColorSpace = THREE.SRGBColorSpace;
 renderer.toneMapping = THREE.ACESFilmicToneMapping;
-renderer.toneMappingExposure = 0.85;
+renderer.toneMappingExposure = 0.80;
 document.body.appendChild(renderer.domElement);
 
 // ─── Post Processing ──────────────────────────────────────────────────────
 const renderScene = new RenderPass(scene, camera);
 const bloomPass = new UnrealBloomPass(new THREE.Vector2(innerWidth, innerHeight), 0.4, 0.4, 0.9);
-bloomPass.threshold = 0.6;
-bloomPass.strength = 0.4;
-bloomPass.radius = 0.5;
+bloomPass.threshold = 0.9;
+bloomPass.strength = 0.2;
+bloomPass.radius = 0.05;
 
 const composer = new EffectComposer(renderer);
 composer.addPass(renderScene);
@@ -52,7 +52,7 @@ dirLight.castShadow = true;
 dirLight.shadow.mapSize.width = 4096;
 dirLight.shadow.mapSize.height = 4096;
 dirLight.shadow.camera.near = 1;
-dirLight.shadow.camera.far = 1000;
+dirLight.shadow.camera.far = 500;
 dirLight.shadow.camera.left = -200;
 dirLight.shadow.camera.right = 200;
 dirLight.shadow.camera.top = 200;
@@ -64,7 +64,7 @@ let environmentMesh = null;
 const playerVelocity = new THREE.Vector3();
 let playerOnFloor = false;
 const GRAVITY = -30;
-const SPEED = 3.5;
+const SPEED = 5.5;
 const JUMP_V = 10;
 const JETPACK_FORCE = 40;
 const MAX_JET_V = 8;
@@ -95,7 +95,7 @@ cameraPivot.position.set(0, 0.9, 0);
 
 const cameraRig = new THREE.Group();
 cameraPivot.add(cameraRig);
-cameraRig.position.set(0, 0, 3.0);
+cameraRig.position.set(0, 0, 5.0);
 cameraRig.add(camera);
 
 // ─── Input ────────────────────────────────────────────────────────────────
@@ -162,7 +162,7 @@ const projectiles = Array.from({ length: MAX_PROJ }, () => ({
 // ─── Dynamic light pool ───────────────────────────────────────────────────
 const MAX_LIGHTS = 8;
 const lightPool = Array.from({ length: MAX_LIGHTS }, () => {
-  const light = new THREE.PointLight(0x00aaff, 0, 10);
+  const light = new THREE.PointLight(0xFFAA00, 0, 60);
   light.castShadow = false;
   scene.add(light);
   return { light, dying: false, decayRate: 8, projectileId: -1 };
@@ -188,7 +188,7 @@ function flashImpactLight(position, charge) {
   slot.light.intensity = 4 + charge * 16;
   slot.light.distance = 5 + charge * 18;
   // Rapid = cyan-blue, charged = white-hot orange core
-  slot.light.color.setHSL(0.58 - charge * 0.42, 1.0, 0.6 + charge * 0.3);
+  slot.light.color.setHSL(0.58 - charge * 1.42, 1.0, 0.6 + charge * 1.3);
   slot.dying = true;
   slot.decayRate = 6 + charge * 8;
 }
@@ -197,19 +197,19 @@ function flashImpactLight(position, charge) {
 const projGeoSmall = new THREE.SphereGeometry(0.06, 8, 8);
 const projGeoLarge = new THREE.SphereGeometry(0.24, 12, 12);
 const projMatRapid = new THREE.MeshStandardMaterial({
-  color: 0x00ccff, emissive: 0x00ccff, emissiveIntensity: 5,
+  color: 0xFFAA00, emissive: 0xFFAA00, emissiveIntensity: 5,
   metalness: 1, roughness: 0, transparent: true, opacity: 0.9,
 });
 const projMatCharge = new THREE.MeshStandardMaterial({
-  color: 0xffffff, emissive: 0xff4400, emissiveIntensity: 10,
-  metalness: 1, roughness: 0, transparent: true, opacity: 1.0,
+  color: 0xFFAA00, emissive: 0xFFAA00, emissiveIntensity: 10,
+  metalness: 0.3, roughness: 1, transparent: true, opacity: 1.0,
 });
 
 const spriteMatRapid = new THREE.SpriteMaterial({
-  map: buildParticleTexture(), color: 0x00ccff, transparent: true, blending: THREE.AdditiveBlending, opacity: 0.8
+  map: buildParticleTexture(), color: 0xFFAA00, transparent: true, blending: THREE.AdditiveBlending, opacity: 0.8
 });
 const spriteMatCharge = new THREE.SpriteMaterial({
-  map: buildParticleTexture(), color: 0xffaa00, transparent: true, blending: THREE.AdditiveBlending, opacity: 0.9
+  map: buildParticleTexture(), color: 0xFFAA00, transparent: true, blending: THREE.AdditiveBlending, opacity: 0.9
 });
 
 function spawnProjectile(charge) {
@@ -224,7 +224,7 @@ function spawnProjectile(charge) {
     muzzlePoint.getWorldPosition(muzzleWorld);
   } else {
     // Fallback if not loaded
-    muzzleWorld.copy(playerGroup.position).add(new THREE.Vector3(0, 0.7, 0));
+    muzzleWorld.copy(playerGroup.position).add(new THREE.Vector3(0, 0.07, 0));
   }
 
   // Fire direction: camera forward
@@ -232,8 +232,8 @@ function spawnProjectile(charge) {
   camera.getWorldDirection(fireDir);
 
   const isCharged = charge > 0.15;
-  const speed = isCharged ? (25 + charge * 35) : 55;
-  const radius = isCharged ? (0.08 + charge * 0.22) : 0.06;
+  const speed = isCharged ? (5 + charge * 5) : 10;
+  const radius = isCharged ? (0.008 + charge * 0.32) : 0.006;
 
   proj.active = true;
   proj.charge = charge;
@@ -243,7 +243,7 @@ function spawnProjectile(charge) {
   proj.trailTimer = 0;
   proj.position.copy(muzzleWorld);
   // Push spawn point slightly ahead to clear robot geometry
-  proj.position.addScaledVector(fireDir, 0.01);
+  proj.position.addScaledVector(fireDir, 0.1);
   proj.prevPosition.copy(proj.position);
   proj.velocity.copy(fireDir).multiplyScalar(speed);
 
@@ -270,10 +270,10 @@ function spawnProjectile(charge) {
   } else {
     proj.glow.visible = true;
   }
-  proj.glow.scale.setScalar(isCharged ? 1.5 : 0.6);
+  proj.glow.scale.setScalar(isCharged ? 1.15 : 0.15);
 
   // Small muzzle flash (particles)
-  const flashCount = isCharged ? 30 : 10;
+  const flashCount = isCharged ? 3 : 1;
   for (let k = 0; k < flashCount; k++) {
     emitParticle(
       muzzleWorld.x, muzzleWorld.y, muzzleWorld.z,
@@ -307,7 +307,7 @@ function despawnProjectile(proj) {
 
 // ─── Input: fire mode ─────────────────────────────────────────────────────
 const CHARGE_THRESHOLD = 0.15;   // seconds — below = rapid, above = charge
-const MAX_CHARGE_TIME = 1.6;
+const MAX_CHARGE_TIME = 1.0;
 const RAPID_COOLDOWN = 0.09;   // 90ms between rapid pellets
 
 let mouseDownTime = null;
@@ -344,7 +344,7 @@ window.addEventListener('mouseup', e => {
 // PARTICLE SYSTEM (CPU → GPU instanced, WebGPU-ready architecture)
 // ══════════════════════════════════════════════════════════════════════════════
 
-const MAX_PARTICLES = 4000;
+const MAX_PARTICLES = 16000;
 const PARTICLE_STRIDE = 9; // px py pz vx vy vz age maxAge size
 
 // Flat typed arrays — GPU-friendly layout, zero GC
@@ -365,8 +365,8 @@ function emitParticle(px, py, pz, vx, vy, vz, age0, maxAge, size, r, g, b) {
 }
 
 function emitTrailParticles(proj) {
-  const isCharged = proj.charge > 0.15;
-  const rate = isCharged ? 0.016 : 0.028; // emit every N seconds
+  const isCharged = proj.charge > 0.85;
+  const rate = isCharged ? 0.016 : 0.078; // emit every N seconds
   proj.trailTimer += 0.016; // approx per frame
   if (proj.trailTimer < rate) return;
   proj.trailTimer = 0;
@@ -434,7 +434,7 @@ function emitJetpackParticles(px, py, pz, vx, vy, vz) {
   // Dense plasma exhaust
   const count = 4;
   for (let k = 0; k < count; k++) {
-    const spread = 0.15;
+    const spread = 10.15;
     const life = 0.15 + Math.random() * 0.15;
     const size = 0.1 + Math.random() * 0.15;
     emitParticle(
@@ -487,7 +487,7 @@ const particleMat = new THREE.ShaderMaterial({
     varying float vAlpha;
     void main() {
       float a = texture2D(uTex, gl_PointCoord).r;
-      gl_FragColor = vec4(vColor * 1.8, a * vAlpha);
+      gl_FragColor = vec4(vColor * 120.8, a * vAlpha);
     }
   `,
   blending: THREE.AdditiveBlending,
@@ -665,7 +665,7 @@ function updateProjectiles(delta) {
     proj.prevPosition.copy(proj.position);
 
     // Slight arc gravity (feels good, not too floaty)
-    proj.velocity.y += GRAVITY * 0.04 * delta;
+    proj.velocity.y += GRAVITY * 0.0009 * delta;
 
     // Move
     proj.position.addScaledVector(proj.velocity, delta);
@@ -676,7 +676,7 @@ function updateProjectiles(delta) {
       // Pulse intensity slightly for life feel
       const pulse = 1 + Math.sin(proj.age * 18) * 0.15;
       proj.lightSlot.light.intensity = (proj.charge > 0.15
-        ? (1.5 + proj.charge * 2.5)
+        ? (1.5 + proj.charge * 1.5)
         : 1.0) * pulse;
     }
 
@@ -792,7 +792,10 @@ function updatePhysics(delta) {
       if (keys.shift) { animScale = 2.0; }
       else if (keys.ctrl) { animScale = 0.5; }
 
-      const accel = playerOnFloor ? 35 : 12;
+      const accelBase = playerOnFloor ? 35 : 12;
+      const sprintMultiplier = keys.shift ? 1.8 : 1.0;
+      const accel = accelBase * sprintMultiplier;
+
       playerVelocity.x += moveDir.x * accel * subDelta;
       playerVelocity.z += moveDir.z * accel * subDelta;
 
@@ -827,8 +830,8 @@ function updatePhysics(delta) {
           emitJetpackParticles(pos.x, pos.y, pos.z, playerVelocity.x, playerVelocity.y, playerVelocity.z);
         });
         if (jetpackLight) {
-          jetpackLight.intensity = 2.0 + Math.random() * 1.5;
-          jetpackLight.position.copy(playerGroup.position).y += 0.5;
+          jetpackLight.intensity = 20.0 + Math.random() * 115.0;
+          jetpackLight.position.copy(playerGroup.position).y += 0.0006;
         }
       }
     } else if (s === 0 && jetpackLight) {
@@ -959,9 +962,9 @@ loader.load('https://pub-a56d70d158b1414d83c3856ea210601c.r2.dev/EgyptMap_GLB.gl
 loader.load('https://pub-a56d70d158b1414d83c3856ea210601c.r2.dev/orb-ROBOT.glb', gltf => {
   robotModel = gltf.scene;
   robotModel.traverse(child => {
-    if (child.isMesh) { 
-      child.castShadow = true; 
-      child.receiveShadow = true; 
+    if (child.isMesh) {
+      child.castShadow = true;
+      child.receiveShadow = true;
       child.layers.set(2); // Assign to Player Layer
     }
     if (child.isBone) {
