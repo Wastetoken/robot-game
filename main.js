@@ -389,10 +389,11 @@ window.addEventListener('mouseup', e => {
   mouseDownTime = null;
   isCharging = false;
   chargeT = 0;
+  if (sfx.charge && sfx.charge.isPlaying) sfx.charge.stop();
   // Reset FOV
   camera.fov = BASE_FOV;
   camera.updateProjectionMatrix();
-  chargeVFX.visible = false;
+  chargeLight.intensity = 0;
   chargeBar.style.display = 'none';
 });
 
@@ -490,34 +491,34 @@ function emitJetpackParticles(px, py, pz, vx, vy, vz) {
   // Triple-layer Afterburner Effect
   const count = 10;
   for (let k = 0; k < count; k++) {
-    const spread = 0.05;
+    const spread = 0.4; // Wider spread so it doesn't look like a single blob
     
     // 1. Plasma Core (High speed, white-hot cyan)
     const lifeCore = 0.1 + Math.random() * 0.2;
-    const sizeCore = 0.4 + Math.random() * 0.5;
+    const sizeCore = 0.2 + Math.random() * 0.3; // Smaller, sharper core
     emitParticle(
       px + (Math.random() - 0.5) * spread,
       py,
       pz + (Math.random() - 0.5) * spread,
-      vx + (Math.random() - 0.5) * 1.5,
+      vx + (Math.random() - 0.5) * 2.0,
       vy - 18.0 - Math.random() * 10.0, 
-      vz + (Math.random() - 0.5) * 1.5,
+      vz + (Math.random() - 0.5) * 2.0,
       0, lifeCore, sizeCore,
-      0.8, 1.0, 1.0 // White-Cyan
+      0.6, 0.9, 1.0 // Bright Cyan
     );
 
     // 2. Plasma Bloom (Large, soft cyan, creates the "thick" trail)
-    const lifeBloom = 0.4 + Math.random() * 0.4;
-    const sizeBloom = 0.8 + Math.random() * 1.2;
+    const lifeBloom = 0.3 + Math.random() * 0.3;
+    const sizeBloom = 0.5 + Math.random() * 0.6; // Reduced to prevent giant blob
     emitParticle(
-      px + (Math.random() - 0.5) * 0.2,
+      px + (Math.random() - 0.5) * 0.5,
       py,
-      pz + (Math.random() - 0.5) * 0.2,
-      vx * 0.8 + (Math.random() - 0.5) * 2.0,
-      vy * 0.5 - 8.0 - Math.random() * 4.0,
-      vz * 0.8 + (Math.random() - 0.5) * 2.0,
+      pz + (Math.random() - 0.5) * 0.5,
+      vx * 0.8 + (Math.random() - 0.5) * 3.0,
+      vy * 0.5 - 10.0 - Math.random() * 5.0,
+      vz * 0.8 + (Math.random() - 0.5) * 3.0,
       0, lifeBloom, sizeBloom,
-      0.0, 0.6, 1.0 // Deep Plasma Blue
+      0.1, 0.5, 1.0 // Deep Plasma Blue
     );
 
     // 3. High-Energy Sparks
@@ -575,8 +576,8 @@ const particleMat = new THREE.ShaderMaterial({
     varying vec3 vColor;
     void main() {
       float a = texture2D(uTex, gl_PointCoord).r;
-      // Multiply color by 80.0 to force it past ACES ToneMapping and trigger Bloom
-      gl_FragColor = vec4(vColor * 80.0, vLife * a);
+      // Multiplier reduced to 15.0 to allow ACES bloom without completely blowing out into a solid white shape
+      gl_FragColor = vec4(vColor * 15.0, vLife * a);
     }
   `
 });
@@ -645,19 +646,8 @@ function tickParticles(delta) {
 }
 
 // ══════════════════════════════════════════════════════════════════════════════
-// CHARGE VFX (corona ring + local particles)
+// CHARGE VFX (local particles only, no ugly torus)
 // ══════════════════════════════════════════════════════════════════════════════
-
-// Simple ring mesh that scales with charge
-const chargeRingGeo = new THREE.TorusGeometry(0.18, 0.02, 8, 32);
-const chargeRingMat = new THREE.MeshStandardMaterial({
-  color: 0x00ffff, emissive: 0x00ffff, emissiveIntensity: 4,
-  transparent: true, opacity: 0.8, side: THREE.DoubleSide,
-});
-const chargeVFX = new THREE.Mesh(chargeRingGeo, chargeRingMat);
-chargeVFX.visible = false;
-playerGroup.add(chargeVFX);
-chargeVFX.position.set(0.3, 0.7, -0.5);
 
 // Charge light (always at muzzle while charging)
 const chargeLight = new THREE.PointLight(0x00ffff, 0, 4);
@@ -732,12 +722,7 @@ function updateProjectiles(delta) {
       chargeFill.style.width = (chargeT * 100) + '%';
       chargeFill.style.background = chargeT > 0.8 ? '#fff' : `linear-gradient(90deg, #ff4d4d, #ffcc00)`;
 
-      // Charge VFX update
-      chargeVFX.visible = true;
-      chargeVFX.scale.setScalar(0.6 + chargeT * 1.8);
-      chargeVFX.rotation.z += delta * (3 + chargeT * 8);
-      chargeRingMat.emissiveIntensity = 3 + chargeT * 8;
-      chargeRingMat.opacity = 0.5 + chargeT * 0.5;
+      // Charge light update
       chargeLight.intensity = chargeT * 3;
       chargeLight.distance = 1 + chargeT * 5;
       chargeLight.color.setHSL(0.5 - chargeT * 0.08, 1, 0.6);
@@ -758,8 +743,7 @@ function updateProjectiles(delta) {
         spawnProjectile(1.0);
         mouseDownTime = null; 
         isCharging = false;
-        if (sfx.charge.isPlaying) sfx.charge.stop();
-        chargeVFX.visible = false;
+        if (sfx.charge && sfx.charge.isPlaying) sfx.charge.stop();
         chargeLight.intensity = 0;
         chargeBar.style.display = 'none';
         camera.fov = BASE_FOV;
