@@ -515,41 +515,45 @@ const particleGeo = new THREE.BufferGeometry();
 const posAttr = new THREE.BufferAttribute(new Float32Array(MAX_PARTICLES * 3), 3);
 const colAttr = new THREE.BufferAttribute(new Float32Array(MAX_PARTICLES * 3), 3);
 const szAttr = new THREE.BufferAttribute(new Float32Array(MAX_PARTICLES), 1);
+const lifeAttr = new THREE.BufferAttribute(new Float32Array(MAX_PARTICLES), 1);
 posAttr.setUsage(THREE.DynamicDrawUsage);
 colAttr.setUsage(THREE.DynamicDrawUsage);
 szAttr.setUsage(THREE.DynamicDrawUsage);
+lifeAttr.setUsage(THREE.DynamicDrawUsage);
 particleGeo.setAttribute('position', posAttr);
 particleGeo.setAttribute('color', colAttr);
-particleGeo.setAttribute('size', szAttr);
-particleGeo.setDrawRange(0, MAX_PARTICLES);
+particleGeo.setAttribute('aSize', szAttr);
+particleGeo.setAttribute('aLife', lifeAttr);
 
 const particleMat = new THREE.ShaderMaterial({
-  uniforms: { uTex: { value: buildParticleTexture() } },
+  transparent: true,
+  depthWrite: false,
+  blending: THREE.AdditiveBlending,
+  uniforms: {
+    uTex: { value: buildParticleTexture() }
+  },
   vertexShader: `
-    attribute float size;
+    attribute float aSize;
+    attribute float aLife;
+    varying float vLife;
     varying vec3 vColor;
-    varying float vAlpha;
     void main() {
+      vLife = aLife;
       vColor = color;
-      vec4 mvPos = modelViewMatrix * vec4(position, 1.0);
-      gl_PointSize = size * (380.0 / -mvPos.z);
-      gl_Position  = projectionMatrix * mvPos;
-      vAlpha = clamp(size * 8.0, 0.0, 1.0);
+      vec4 mvPosition = modelViewMatrix * vec4(position, 1.0);
+      gl_PointSize = aSize * (700.0 / -mvPosition.z);
+      gl_Position = projectionMatrix * mvPosition;
     }
   `,
   fragmentShader: `
     uniform sampler2D uTex;
+    varying float vLife;
     varying vec3 vColor;
-    varying float vAlpha;
     void main() {
-      float a = texture2D(uTex, gl_PointCoord).r;
-      gl_FragColor = vec4(vColor * 120.8, a * vAlpha);
+      vec4 tex = texture2D(uTex, gl_PointCoord);
+      gl_FragColor = vec4(vColor, vLife * tex.a);
     }
-  `,
-  blending: THREE.AdditiveBlending,
-  depthWrite: false,
-  transparent: true,
-  vertexColors: true,
+  `
 });
 
 const particleMesh = new THREE.Points(particleGeo, particleMat);
@@ -603,13 +607,15 @@ function tickParticles(delta) {
     colAttr.array[i * 3 + 0] = pColor[i * 3 + 0];
     colAttr.array[i * 3 + 1] = pColor[i * 3 + 1];
     colAttr.array[i * 3 + 2] = pColor[i * 3 + 2];
-    szAttr.array[i] = pData[d + 8] * life * life; // quadratic fade-out
+    szAttr.array[i] = pData[d + 8]; 
+    lifeAttr.array[i] = life * life; // quadratic fade
 
     liveCount++;
   }
   posAttr.needsUpdate = true;
   colAttr.needsUpdate = true;
   szAttr.needsUpdate = true;
+  lifeAttr.needsUpdate = true;
 }
 
 // ══════════════════════════════════════════════════════════════════════════════
