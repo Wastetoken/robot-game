@@ -901,16 +901,6 @@ function updatePhysics(delta) {
 
       playerVelocity.x += moveDir.x * accel * subDelta;
       playerVelocity.z += moveDir.z * accel * subDelta;
-
-      if (s === 0 && robotModel) {
-        const target = Math.atan2(moveDir.x, moveDir.z);
-        let diff = target - robotModel.rotation.y;
-        diff = Math.atan2(Math.sin(diff), Math.cos(diff));
-        robotModel.rotation.y += diff * 15 * delta;
-        if (runAction) { runAction.paused = false; runAction.setEffectiveTimeScale(animScale); }
-      }
-    } else if (s === 0 && runAction) {
-      runAction.paused = true;
     }
 
     const friction = playerOnFloor ? 22 : 2.5;
@@ -1186,6 +1176,19 @@ function animate() {
     const diff = ((targetAngle - curAngle + Math.PI) % (Math.PI * 2)) - Math.PI;
     const lerpFactor = isMoving ? (1 - Math.exp(-12 * delta)) : (1 - Math.exp(-8 * delta));
     robotModel.rotation.y += diff * lerpFactor;
+
+    // Animation control
+    if (runAction) {
+      const isTurning = Math.abs(diff) > 0.05;
+      if (isMoving || (isTurning && playerOnFloor)) {
+        runAction.paused = false;
+        const targetScale = isMoving ? (keys.shift ? 2.0 : 1.0) : 0.6; // Slower shuffle for turns
+        runAction.setEffectiveTimeScale(targetScale);
+        runAction.setEffectiveWeight(isMoving ? 1.0 : 0.5);
+      } else {
+        runAction.paused = true;
+      }
+    }
 
     // Servo sound: only when standing still and actually turning
     if (!isMoving && playerOnFloor && Math.abs(diff) > 0.01 && isMouseMoving) {
