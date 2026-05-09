@@ -10,7 +10,6 @@
 //   4. setShieldLife(0–1)             — drives color shift + HUD
 //   5. shieldGroup / shieldMesh       — transform/parent as needed
 //
-
 import * as THREE from 'three';
 
 export const SHIELD_CONFIG = {
@@ -29,7 +28,7 @@ export const SHIELD_CONFIG = {
 export let shieldLife = 1.0;
 export let shieldReveal = 1.0;
 export let shieldRevealSpeed = 3.5;
-export function setShieldLife(v)   { shieldLife   = Math.max(0, Math.min(1, v)); }
+export function setShieldLife(v) { shieldLife = Math.max(0, Math.min(1, v)); }
 export function setShieldReveal(v) { shieldReveal = Math.max(0, Math.min(1, v)); }
 
 let _clock = 0, _hitIdx = 0;
@@ -160,36 +159,36 @@ export function initShield(scene, overrides = {}) {
 
   _mat = new THREE.ShaderMaterial({
     uniforms: {
-      uTime:                { value: 0 },
-      uColor:               { value: new THREE.Color(cfg.color) },
-      uLife:                { value: shieldLife },
-      uHexScale:            { value: cfg.hexScale },
-      uEdgeWidth:           { value: cfg.edgeWidth },
-      uFresnelPower:        { value: cfg.fresnelPower },
-      uFresnelStrength:     { value: cfg.fresnelStrength },
-      uOpacity:             { value: cfg.opacity },
-      uReveal:              { value: shieldReveal },
-      uFlashSpeed:          { value: cfg.flashSpeed },
-      uFlashIntensity:      { value: cfg.flashIntensity },
-      uNoiseScale:          { value: cfg.noiseScale },
-      uNoiseEdgeColor:      { value: new THREE.Color(cfg.noiseEdgeColor) },
-      uNoiseEdgeWidth:      { value: cfg.noiseEdgeWidth },
-      uNoiseEdgeIntensity:  { value: cfg.noiseEdgeIntensity },
+      uTime: { value: 0 },
+      uColor: { value: new THREE.Color(cfg.color) },
+      uLife: { value: shieldLife },
+      uHexScale: { value: cfg.hexScale },
+      uEdgeWidth: { value: cfg.edgeWidth },
+      uFresnelPower: { value: cfg.fresnelPower },
+      uFresnelStrength: { value: cfg.fresnelStrength },
+      uOpacity: { value: cfg.opacity },
+      uReveal: { value: shieldReveal },
+      uFlashSpeed: { value: cfg.flashSpeed },
+      uFlashIntensity: { value: cfg.flashIntensity },
+      uNoiseScale: { value: cfg.noiseScale },
+      uNoiseEdgeColor: { value: new THREE.Color(cfg.noiseEdgeColor) },
+      uNoiseEdgeWidth: { value: cfg.noiseEdgeWidth },
+      uNoiseEdgeIntensity: { value: cfg.noiseEdgeIntensity },
       uNoiseEdgeSmoothness: { value: cfg.noiseEdgeSmoothness },
-      uHexOpacity:          { value: cfg.hexOpacity },
-      uShowHex:             { value: cfg.showHex ? 1.0 : 0.0 },
-      uFlowScale:           { value: cfg.flowScale },
-      uFlowSpeed:           { value: cfg.flowSpeed },
-      uFlowIntensity:       { value: cfg.flowIntensity },
-      uHitPos:              { value: _hitPositions },
-      uHitTime:             { value: _hitTimes },
-      uHitRingSpeed:        { value: cfg.hitRingSpeed },
-      uHitRingWidth:        { value: cfg.hitRingWidth },
-      uHitMaxRadius:        { value: cfg.hitMaxRadius },
-      uHitDuration:         { value: cfg.hitDuration },
-      uHitIntensity:        { value: cfg.hitIntensity },
-      uHitImpactRadius:     { value: cfg.hitImpactRadius },
-      uFadeStart:           { value: cfg.fadeStart },
+      uHexOpacity: { value: cfg.hexOpacity },
+      uShowHex: { value: cfg.showHex ? 1.0 : 0.0 },
+      uFlowScale: { value: cfg.flowScale },
+      uFlowSpeed: { value: cfg.flowSpeed },
+      uFlowIntensity: { value: cfg.flowIntensity },
+      uHitPos: { value: _hitPositions },
+      uHitTime: { value: _hitTimes },
+      uHitRingSpeed: { value: cfg.hitRingSpeed },
+      uHitRingWidth: { value: cfg.hitRingWidth },
+      uHitMaxRadius: { value: cfg.hitMaxRadius },
+      uHitDuration: { value: cfg.hitDuration },
+      uHitIntensity: { value: cfg.hitIntensity },
+      uHitImpactRadius: { value: cfg.hitImpactRadius },
+      uFadeStart: { value: cfg.fadeStart },
     },
     vertexShader: _vert, fragmentShader: _frag,
     transparent: true, depthWrite: false, depthTest: true,
@@ -208,8 +207,8 @@ export function initShield(scene, overrides = {}) {
 export function updateShield(delta) {
   if (!_mat) return;
   _clock += delta;
-  _mat.uniforms.uTime.value   = _clock;
-  _mat.uniforms.uLife.value   = shieldLife;
+  _mat.uniforms.uTime.value = _clock;
+  _mat.uniforms.uLife.value = shieldLife;
   _mat.uniforms.uReveal.value = shieldReveal;
 }
 
@@ -226,4 +225,4 @@ export function registerShieldHit(worldPoint) {
 }
 
 export function playShieldReveal() { shieldReveal = 1.0; }
-export function resetShieldHits()  { _hitIdx = 0; if (_mat) _mat.uniforms.uHitTime.value.fill(-999); }
+export function resetShieldHits() { _hitIdx = 0; if (_mat) _mat.uniforms.uHitTime.value.fill(-999); }
