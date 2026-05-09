@@ -582,6 +582,7 @@ const particleMat = new THREE.ShaderMaterial({
 
 const particleMesh = new THREE.Points(particleGeo, particleMat);
 particleMesh.layers.set(1); // Visual layer
+particleMesh.frustumCulled = false; // CRITICAL: Prevent entire system from vanishing when camera looks away from origin
 scene.add(particleMesh);
 
 function buildParticleTexture() {
