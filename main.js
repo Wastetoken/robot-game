@@ -487,25 +487,49 @@ function emitChargeParticles(px, py, pz, charge) {
 }
 
 function emitJetpackParticles(px, py, pz, vx, vy, vz) {
-  // Dense plasma exhaust
-  const count = 6;
+  // Triple-layer Afterburner Effect
+  const count = 10;
   for (let k = 0; k < count; k++) {
-    const spread = 0.08;
-    const life = 0.2 + Math.random() * 0.4;
-    const size = 0.12 + Math.random() * 0.18;
+    const spread = 0.05;
+    
+    // 1. Plasma Core (High speed, white-hot cyan)
+    const lifeCore = 0.1 + Math.random() * 0.2;
+    const sizeCore = 0.4 + Math.random() * 0.5;
     emitParticle(
       px + (Math.random() - 0.5) * spread,
-      py + (Math.random() - 0.5) * spread,
+      py,
       pz + (Math.random() - 0.5) * spread,
-      vx + (Math.random() - 0.5) * 1.0,
-      vy - 12.0 - Math.random() * 6.0, // Violent downward thrust
-      vz + (Math.random() - 0.5) * 1.0,
-      0, life, size,
-      0.1, 0.7, 1.0 // Plasma Cyan/Blue
+      vx + (Math.random() - 0.5) * 1.5,
+      vy - 18.0 - Math.random() * 10.0, 
+      vz + (Math.random() - 0.5) * 1.5,
+      0, lifeCore, sizeCore,
+      0.8, 1.0, 1.0 // White-Cyan
     );
-    // Core white hot spark
-    if (Math.random() > 0.4) {
-      emitParticle(px, py, pz, vx, vy - 15.0, vz, 0, 0.1, 0.2, 1, 1, 1);
+
+    // 2. Plasma Bloom (Large, soft cyan, creates the "thick" trail)
+    const lifeBloom = 0.4 + Math.random() * 0.4;
+    const sizeBloom = 0.8 + Math.random() * 1.2;
+    emitParticle(
+      px + (Math.random() - 0.5) * 0.2,
+      py,
+      pz + (Math.random() - 0.5) * 0.2,
+      vx * 0.8 + (Math.random() - 0.5) * 2.0,
+      vy * 0.5 - 8.0 - Math.random() * 4.0,
+      vz * 0.8 + (Math.random() - 0.5) * 2.0,
+      0, lifeBloom, sizeBloom,
+      0.0, 0.6, 1.0 // Deep Plasma Blue
+    );
+
+    // 3. High-Energy Sparks
+    if (k % 3 === 0) {
+      emitParticle(
+        px, py, pz,
+        vx + (Math.random() - 0.5) * 10.0,
+        vy - 5.0 - Math.random() * 20.0,
+        vz + (Math.random() - 0.5) * 10.0,
+        0, 0.15, 0.15,
+        1.0, 1.0, 1.0
+      );
     }
   }
 }
