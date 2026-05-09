@@ -1204,15 +1204,33 @@ function animate() {
     robotBones.body.rotation.set(0, 0, 0);
     robotBones.rootLegs.forEach(l => { l.position.set(0, 0, 0); l.rotation.set(0, 0, 0); });
 
-    if (isJetpacking) {
-      robotBones.body.rotation.x = 0.3; // Lean forward
-      robotBones.body.position.y += Math.sin(clock.elapsedTime * 20) * 0.05; // Hover jitter
-      robotBones.rootLegs.forEach(l => { l.rotation.x = -0.4; });
+    if (isJetpacking || !playerOnFloor) {
+      // Common aerial dangling logic
+      const horizontalVel = new THREE.Vector2(playerVelocity.x, playerVelocity.z);
+      const speed = horizontalVel.length();
+      
+      // Lean body slightly based on movement
+      robotBones.body.rotation.x = isJetpacking ? 0.3 : (speed * 0.02);
+      
+      // Vertical dangle swing
+      const swing = Math.sin(clock.elapsedTime * 2.5) * 0.1;
+      const verticalDrag = Math.max(-0.6, Math.min(0.6, -playerVelocity.y * 0.04));
+      
+      robotBones.rootLegs.forEach((l, i) => {
+        // Extend downwards
+        l.rotation.x = isJetpacking ? -0.5 : -0.2;
+        l.rotation.x += verticalDrag + swing;
+        
+        // Sway opposite to movement direction (local space)
+        // We'll simplify with a generic lag for now
+        l.rotation.z = (Math.cos(clock.elapsedTime * 1.5 + i) * 0.05); 
+      });
+
+      if (isJetpacking) {
+        robotBones.body.position.y += Math.sin(clock.elapsedTime * 20) * 0.05; // Hover jitter
+      }
+      
       if (runAction) runAction.setEffectiveWeight(0.1);
-    } else if (!playerOnFloor) {
-      robotBones.body.position.y += 0.4;
-      robotBones.rootLegs.forEach(l => { l.rotation.z += 0.5; });
-      if (runAction) runAction.setEffectiveWeight(0.2);
     } else {
       if (runAction) runAction.setEffectiveWeight(1.0);
       if (keys.ctrl) {
