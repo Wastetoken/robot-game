@@ -72,7 +72,7 @@ const BASE_FOV = 75;
 
 // ─── Player group ──────────────────────────────────────────────────────────
 const playerGroup = new THREE.Group();
-playerGroup.position.set(12, 0.2, -10); // Tactical floor-level spawn
+playerGroup.position.set(0, 1.0, 0); // Neutral center spawn for new map
 scene.add(playerGroup);
 
 // ─── Robot model & bones ───────────────────────────────────────────────────
@@ -861,7 +861,7 @@ function updatePhysics(delta) {
   cameraRig.rotation.x = smoothPitch;
 
   if (playerGroup.position.y < -50) {
-    playerGroup.position.set(12, 0.2, -10);
+    playerGroup.position.set(0, 1.0, 0);
     playerVelocity.set(0, 0, 0);
   }
 
@@ -885,7 +885,7 @@ function updatePhysics(delta) {
 
 const loader = new GLTFLoader();
 
-loader.load('https://pub-a56d70d158b1414d83c3856ea210601c.r2.dev/vr__lazer_tag__paintball_arena.glb', gltf => {
+loader.load('https://pub-a56d70d158b1414d83c3856ea210601c.r2.dev/EgyptMap_GLB.glb', gltf => {
   const model = gltf.scene;
   model.updateMatrixWorld(true);
   model.traverse(child => {
