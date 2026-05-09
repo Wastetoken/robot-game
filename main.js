@@ -12,6 +12,15 @@ THREE.BufferGeometry.prototype.computeBoundsTree = computeBoundsTree;
 THREE.BufferGeometry.prototype.disposeBoundsTree = disposeBoundsTree;
 THREE.Mesh.prototype.raycast = acceleratedRaycast;
 
+// ─── Renderer ─────────────────────────────────────────────────────────────
+const scene = new THREE.Scene();
+scene.background = new THREE.Color(0xB5F8FF);
+scene.fog = new THREE.FogExp2(0xe6d1b3, 0.01); // Light desert haze
+
+const camera = new THREE.PerspectiveCamera(75, innerWidth / innerHeight, 0.1, 1000);
+camera.layers.enable(1); // Projectiles / VFX
+camera.layers.enable(2); // Player / Robot
+
 // ─── Audio System ──────────────────────────────────────────────────────────
 const listener = new THREE.AudioListener();
 camera.add(listener);
@@ -42,15 +51,6 @@ loadSFX('charge', 'SFX/HoldFire.mp3', true, 0.5);
 loadSFX('fire', 'SFX/SingleFire.mp3', false, 0.7);
 loadSFX('shield', 'SFX/Shield.wav', false, 0.6);
 loadSFX('servo', 'SFX/Mouse-Rotation.mp3', true, 0.3);
-
-// ─── Renderer ─────────────────────────────────────────────────────────────
-const scene = new THREE.Scene();
-scene.background = new THREE.Color(0xB5F8FF);
-scene.fog = new THREE.FogExp2(0xe6d1b3, 0.01); // Light desert haze
-
-const camera = new THREE.PerspectiveCamera(75, innerWidth / innerHeight, 0.1, 1000);
-camera.layers.enable(1); // Projectiles / VFX
-camera.layers.enable(2); // Player / Robot
 
 const renderer = new THREE.WebGLRenderer({ antialias: true });
 renderer.setSize(innerWidth, innerHeight);
