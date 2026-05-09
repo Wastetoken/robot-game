@@ -72,7 +72,7 @@ const BASE_FOV = 75;
 
 // ─── Player group ──────────────────────────────────────────────────────────
 const playerGroup = new THREE.Group();
-playerGroup.position.set(-70.0, 1.5, 0.0); // Safe floor spawn for Egypt Map
+playerGroup.position.set(-50.0, 1.5, 0.0); // Open sand area in Egypt Map
 scene.add(playerGroup);
 
 // ─── Robot model & bones ───────────────────────────────────────────────────
@@ -861,7 +861,7 @@ function updatePhysics(delta) {
   cameraRig.rotation.x = smoothPitch;
 
   if (playerGroup.position.y < -50) {
-    playerGroup.position.set(-70.0, 1.5, 0.0);
+    playerGroup.position.set(-50.0, 1.5, 0.0);
     playerVelocity.set(0, 0, 0);
   }
 
