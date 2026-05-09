@@ -66,6 +66,8 @@ let playerOnFloor = false;
 const GRAVITY = -30;
 const SPEED = 3.5;
 const JUMP_V = 10;
+const JETPACK_FORCE = 40;
+const MAX_JET_V = 8;
 const CAP_HEIGHT = 1.0;
 const CAP_RADIUS = 0.3;
 const BASE_FOV = 75;
@@ -78,6 +80,8 @@ scene.add(playerGroup);
 // ─── Robot model & bones ───────────────────────────────────────────────────
 let robotModel = null, mixer = null, runAction = null;
 let muzzlePoint = null;
+let jetpackLight = null;
+let isJetpacking = false;
 const robotBones = { body: null, rootLegs: [] };
 
 // ─── Camera rig ───────────────────────────────────────────────────────────
@@ -423,6 +427,30 @@ function emitChargeParticles(px, py, pz, charge) {
       0.05 + charge * 0.12,
       0.4, 0.8 + charge * 0.2, 1.0,
     );
+  }
+}
+
+function emitJetpackParticles(px, py, pz, vx, vy, vz) {
+  // Dense plasma exhaust
+  const count = 4;
+  for (let k = 0; k < count; k++) {
+    const spread = 0.15;
+    const life = 0.15 + Math.random() * 0.15;
+    const size = 0.1 + Math.random() * 0.15;
+    emitParticle(
+      px + (Math.random() - 0.5) * spread,
+      py + (Math.random() - 0.5) * spread,
+      pz + (Math.random() - 0.5) * spread,
+      vx + (Math.random() - 0.5) * 0.5,
+      vy - 2.0 - Math.random() * 2.0, // strong downward push
+      vz + (Math.random() - 0.5) * 0.5,
+      0, life, size,
+      0.2, 0.6, 1.0 // Plasma Blue
+    );
+    // Core white hot
+    if (Math.random() > 0.5) {
+      emitParticle(px, py, pz, vx * 0.5, vy - 4.0, vz * 0.5, 0, 0.1, 0.2, 1, 1, 1);
+    }
   }
 }
 
@@ -786,6 +814,27 @@ function updatePhysics(delta) {
     if (s === 0 && playerOnFloor && keys.space) playerVelocity.y = JUMP_V;
 
     playerVelocity.y += playerOnFloor ? 0 : GRAVITY * subDelta;
+
+    // ── Jetpack Logic ────────────────────────────────────────────────────────
+    isJetpacking = !playerOnFloor && keys.space && playerVelocity.y < MAX_JET_V;
+    if (isJetpacking) {
+      playerVelocity.y += JETPACK_FORCE * subDelta;
+      if (s === 0) {
+        // Particles from each leg
+        const pos = _tempV1;
+        robotBones.rootLegs.forEach(leg => {
+          leg.getWorldPosition(pos);
+          emitJetpackParticles(pos.x, pos.y, pos.z, playerVelocity.x, playerVelocity.y, playerVelocity.z);
+        });
+        if (jetpackLight) {
+          jetpackLight.intensity = 2.0 + Math.random() * 1.5;
+          jetpackLight.position.copy(playerGroup.position).y += 0.5;
+        }
+      }
+    } else if (s === 0 && jetpackLight) {
+      jetpackLight.intensity = 0;
+    }
+
     playerGroup.position.addScaledVector(playerVelocity, subDelta);
 
     // Collision Sweep
@@ -930,6 +979,9 @@ loader.load('https://pub-a56d70d158b1414d83c3856ea210601c.r2.dev/orb-ROBOT.glb',
   muzzlePoint = muzzlePointInternal;
   window.muzzlePoint = muzzlePoint; // Global reference for spawnProjectile
 
+  jetpackLight = new THREE.PointLight(0x4488ff, 0, 6);
+  scene.add(jetpackLight);
+
   mixer = new THREE.AnimationMixer(robotModel);
   let clip = gltf.animations.find(c => /run|walk/i.test(c.name)) || gltf.animations[0];
   if (clip) {
@@ -969,7 +1021,12 @@ function animate() {
     robotBones.body.rotation.set(0, 0, 0);
     robotBones.rootLegs.forEach(l => { l.position.set(0, 0, 0); l.rotation.set(0, 0, 0); });
 
-    if (!playerOnFloor) {
+    if (isJetpacking) {
+      robotBones.body.rotation.x = 0.3; // Lean forward
+      robotBones.body.position.y += Math.sin(clock.elapsedTime * 20) * 0.05; // Hover jitter
+      robotBones.rootLegs.forEach(l => { l.rotation.x = -0.4; });
+      if (runAction) runAction.setEffectiveWeight(0.1);
+    } else if (!playerOnFloor) {
       robotBones.body.position.y += 0.4;
       robotBones.rootLegs.forEach(l => { l.rotation.z += 0.5; });
       if (runAction) runAction.setEffectiveWeight(0.2);
