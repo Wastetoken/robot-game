@@ -715,6 +715,9 @@ function updateProjectiles(delta) {
       camera.updateProjectionMatrix();
 
       // Emit swirling charge particles at muzzle
+      if (muzzlePoint) {
+        const mw = _tempV1;
+        muzzlePoint.getWorldPosition(mw);
         emitChargeParticles(mw.x, mw.y, mw.z, chargeT);
       }
 
