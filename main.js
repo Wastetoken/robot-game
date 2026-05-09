@@ -5,6 +5,7 @@ import { EffectComposer } from 'three/addons/postprocessing/EffectComposer.js';
 import { RenderPass } from 'three/addons/postprocessing/RenderPass.js';
 import { UnrealBloomPass } from 'three/addons/postprocessing/UnrealBloomPass.js';
 import { OutputPass } from 'three/addons/postprocessing/OutputPass.js';
+import { initShield, updateShield, registerShieldHit, shieldGroup, shieldLife, setShieldLife, shieldReveal, setShieldReveal, shieldMesh } from './shield.js';
 
 // ─── BVH extensions ────────────────────────────────────────────────────────
 THREE.BufferGeometry.prototype.computeBoundsTree = computeBoundsTree;
@@ -82,6 +83,7 @@ let robotModel = null, mixer = null, runAction = null;
 let muzzlePoint = null;
 let jetpackLight = null;
 let isJetpacking = false;
+let shieldActive = false;
 const robotBones = { body: null, rootLegs: [] };
 
 // ─── Camera rig ───────────────────────────────────────────────────────────
@@ -108,6 +110,13 @@ document.addEventListener('keydown', e => {
   if (e.code === 'Space') keys.space = true;
   if (e.code === 'ShiftLeft' || e.code === 'ShiftRight') keys.shift = true;
   if (e.code === 'ControlLeft' || e.code === 'ControlRight' || e.code === 'KeyC') keys.ctrl = true;
+  
+  if (e.code === 'KeyQ') {
+    shieldActive = !shieldActive;
+    if (shieldActive) {
+      setShieldReveal(1.0); // Replay dissolve on activation
+    }
+  }
 });
 document.addEventListener('keyup', e => {
   if (e.code === 'KeyW') keys.w = false;
@@ -590,7 +599,17 @@ function pointInCapsule(point, capStart, capEnd, radius) {
 // ─── Impact ───────────────────────────────────────────────────────────────
 
 // ─── Impact ───────────────────────────────────────────────────────────────
-function handleImpact(position, normal, charge) {
+function handleImpact(position, normal, charge, targetObj = null) {
+  // Shield interaction
+  if (shieldActive && (targetObj === shieldMesh || (targetObj && targetObj.layers.isEnabled(2)))) {
+    registerShieldHit(position);
+    const damage = charge > 0.5 ? 0.25 : 0.08;
+    setShieldLife(shieldLife - damage);
+    // Shield absorbs energy, so we can exit early or play a different effect
+    flashImpactLight(position, charge * 0.5);
+    return true; // Impact absorbed by shield
+  }
+
   flashImpactLight(position, charge);
   emitImpactBurst(
     position.x, position.y, position.z,
@@ -708,11 +727,26 @@ function updateProjectiles(delta) {
       const ray = new THREE.Raycaster(sweepOrigin, sweepDir, 0, sweepDist + proj.radius + 0.1);
       ray.layers.set(0); // Only intersect environment
       const hits = ray.intersectObject(environmentMesh, true);
+      
+      // Check shield collision if active
+      let shieldHit = null;
+      if (shieldActive && shieldMesh) {
+        const sHits = ray.intersectObject(shieldMesh);
+        if (sHits.length > 0 && (!hits.length || sHits[0].distance < hits[0].distance)) {
+          shieldHit = sHits[0];
+        }
+      }
+
+      if (shieldHit) {
+        handleImpact(shieldHit.point, shieldHit.face.normal, proj.charge, shieldMesh);
+        despawnProjectile(proj);
+        continue;
+      }
 
       if (hits.length > 0) {
         const hit = hits[0];
         const normal = hit.face ? hit.face.normal.clone().transformDirection(hit.object.matrixWorld) : new THREE.Vector3(0, 1, 0);
-        handleImpact(hit.point, normal, proj.charge);
+        handleImpact(hit.point, normal, proj.charge, hit.object);
         despawnProjectile(proj);
         continue;
       }
@@ -723,7 +757,7 @@ function updateProjectiles(delta) {
       _capS.set(0, CAP_RADIUS, 0).add(playerGroup.position);
       _capE.set(0, CAP_HEIGHT + CAP_RADIUS, 0).add(playerGroup.position);
       if (pointInCapsule(proj.position, _capS, _capE, CAP_RADIUS + proj.radius)) {
-        handleImpact(proj.position.clone(), new THREE.Vector3(0, 1, 0), proj.charge);
+        handleImpact(proj.position.clone(), new THREE.Vector3(0, 1, 0), proj.charge, playerGroup);
         despawnProjectile(proj);
         continue;
       }
@@ -985,6 +1019,11 @@ loader.load('https://pub-a56d70d158b1414d83c3856ea210601c.r2.dev/orb-ROBOT.glb',
   jetpackLight = new THREE.PointLight(0x4488ff, 0, 6);
   scene.add(jetpackLight);
 
+  // Initialize Shield
+  initShield(scene);
+  playerGroup.add(shieldGroup);
+  shieldGroup.position.set(0, 0.7, 0); // Center on robot
+
   mixer = new THREE.AnimationMixer(robotModel);
   let clip = gltf.animations.find(c => /run|walk/i.test(c.name)) || gltf.animations[0];
   if (clip) {
@@ -1017,6 +1056,15 @@ function animate() {
   updatePhysics(delta);
   updateProjectiles(delta);
   tickParticles(delta);
+
+  // Shield Reveal Logic
+  if (shieldActive) {
+    if (shieldReveal > 0) setShieldReveal(shieldReveal - delta * 2.5);
+  } else {
+    // Hidden
+    setShieldReveal(1.0); 
+  }
+  updateShield(delta);
 
   // ── Procedural bone poses ───────────────────────────────────────────────
   if (robotModel && robotBones.body) {
