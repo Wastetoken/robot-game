@@ -728,12 +728,17 @@ function updateProjectiles(delta) {
       ray.layers.set(0); // Only intersect environment
       const hits = ray.intersectObject(environmentMesh, true);
       
-      // Check shield collision if active
+      // Check shield collision if active (One-way: only blocks incoming)
       let shieldHit = null;
       if (shieldActive && shieldMesh) {
         const sHits = ray.intersectObject(shieldMesh);
-        if (sHits.length > 0 && (!hits.length || sHits[0].distance < hits[0].distance)) {
-          shieldHit = sHits[0];
+        if (sHits.length > 0) {
+          const sHit = sHits[0];
+          // Use dot product to determine if hit is from outside (incoming)
+          const dot = ray.ray.direction.dot(sHit.face.normal);
+          if (dot < 0 && (!hits.length || sHit.distance < hits[0].distance)) {
+            shieldHit = sHit;
+          }
         }
       }
 
