@@ -143,7 +143,7 @@ document.addEventListener('keydown', e => {
   if (e.code === 'Space') keys.space = true;
   if (e.code === 'ShiftLeft' || e.code === 'ShiftRight') keys.shift = true;
   if (e.code === 'ControlLeft' || e.code === 'ControlRight' || e.code === 'KeyC') keys.ctrl = true;
-  
+
   if (e.code === 'KeyQ') {
     shieldActive = !shieldActive;
     if (shieldActive) {
@@ -183,7 +183,7 @@ document.addEventListener('mousemove', e => {
   yaw -= (e.movementX || 0) * 0.002;
   pitch -= (e.movementY || 0) * 0.002;
   pitch = Math.max(-Math.PI / 2 + 0.05, Math.min(Math.PI / 2 - 0.05, pitch));
-  
+
   if (Math.abs(e.movementX) > 0.1 || Math.abs(e.movementY) > 0.1) {
     isMouseMoving = true;
     mouseMoveTimer = 0.1; // maintain for 100ms
@@ -487,53 +487,88 @@ function emitChargeParticles(px, py, pz, charge) {
   }
 }
 
-function emitJetpackParticles(px, py, pz, vx, vy, vz) {
-  // Triple-layer Afterburner Effect
-  const count = 10;
-  for (let k = 0; k < count; k++) {
-    const spread = 0.4; // Wider spread so it doesn't look like a single blob
-    
-    // 1. Plasma Core (High speed, white-hot cyan)
-    const lifeCore = 0.1 + Math.random() * 0.2;
-    const sizeCore = 0.2 + Math.random() * 0.3; // Smaller, sharper core
-    emitParticle(
-      px + (Math.random() - 0.5) * spread,
-      py,
-      pz + (Math.random() - 0.5) * spread,
-      vx + (Math.random() - 0.5) * 2.0,
-      vy - 18.0 - Math.random() * 10.0, 
-      vz + (Math.random() - 0.5) * 2.0,
-      0, lifeCore, sizeCore,
-      0.6, 0.9, 1.0 // Bright Cyan
-    );
-
-    // 2. Plasma Bloom (Large, soft cyan, creates the "thick" trail)
-    const lifeBloom = 0.3 + Math.random() * 0.3;
-    const sizeBloom = 0.5 + Math.random() * 0.6; // Reduced to prevent giant blob
-    emitParticle(
-      px + (Math.random() - 0.5) * 0.5,
-      py,
-      pz + (Math.random() - 0.5) * 0.5,
-      vx * 0.8 + (Math.random() - 0.5) * 3.0,
-      vy * 0.5 - 10.0 - Math.random() * 5.0,
-      vz * 0.8 + (Math.random() - 0.5) * 3.0,
-      0, lifeBloom, sizeBloom,
-      0.1, 0.5, 1.0 // Deep Plasma Blue
-    );
-
-    // 3. High-Energy Sparks
-    if (k % 3 === 0) {
-      emitParticle(
-        px, py, pz,
-        vx + (Math.random() - 0.5) * 10.0,
-        vy - 5.0 - Math.random() * 20.0,
-        vz + (Math.random() - 0.5) * 10.0,
-        0, 0.15, 0.15,
-        1.0, 1.0, 1.0
-      );
+// ══════════════════════════════════════════════════════════════════════════════
+// WGSL FLAME JETPACK (Converted from WebGPU)
+// ══════════════════════════════════════════════════════════════════════════════
+const jetpackFlameMat = new THREE.ShaderMaterial({
+  transparent: true,
+  depthWrite: false,
+  blending: THREE.AdditiveBlending,
+  uniforms: {
+    iTime: { value: 0.0 }
+  },
+  vertexShader: `
+    varying vec2 vUv;
+    void main() {
+      vUv = uv;
+      gl_Position = projectionMatrix * modelViewMatrix * vec4(position, 1.0);
     }
-  }
-}
+  `,
+  fragmentShader: `
+    uniform float iTime;
+    varying vec2 vUv;
+
+    float noise(vec3 p) {
+        vec3 i = floor(p);
+        vec4 a = dot(i, vec3(1.0, 57.0, 21.0)) + vec4(0.0, 57.0, 21.0, 78.0);
+        vec3 f = cos((p-i)*acos(-1.0))*(-0.5)+0.5;
+        a = mix(sin(cos(a)*a), sin(cos(1.0+a)*(1.0+a)), f.x);
+        a.xy = mix(vec2(a.x, a.z), vec2(a.y, a.w), f.y);
+        return mix(a.x, a.y, f.z);
+    }
+
+    float sphere(vec3 p, vec4 spr) {
+        return length(spr.xyz - p) - spr.w;
+    }
+
+    float flame(vec3 p) {
+        float d = sphere(p * vec3(1.0, 0.5, 1.0), vec4(0.0, -1.0, 0.0, 1.0));
+        return d + (noise(p + vec3(0.0, iTime * 2.0, 0.0)) + noise(p * 3.0) * 0.5) * 0.25 * (p.y);
+    }
+
+    float scene(vec3 p) {
+        return min(100.0 - length(p), abs(flame(p)));
+    }
+
+    vec4 raymarch(vec3 org, vec3 dir) {
+        float d = 0.0;
+        float glow = 0.0;
+        float eps = 0.02;
+        vec3 p = org;
+        bool glowed = false;
+        for(int i=0; i<64; i++) {
+            d = scene(p) + eps;
+            p += d * dir;
+            if(d > eps) {
+                if(flame(p) < 0.0) glowed = true;
+                if(glowed) glow = float(i) / 64.0;
+            }
+        }
+        return vec4(p, glow);
+    }
+
+    void main() {
+        // Flip Y to make the flame point down
+        vec2 v = -1.0 + 2.0 * vec2(vUv.x, 1.0 - vUv.y);
+        vec3 org = vec3(0.0, -2.0, 4.0);
+        vec3 dir = normalize(vec3(v.x * 1.6, -v.y, -1.5));
+        
+        vec4 p = raymarch(org, dir);
+        float glow = p.w;
+        
+        vec4 col = mix(vec4(1.0, 0.5, 0.1, 1.0), vec4(0.1, 0.5, 1.0, 1.0), p.y * 0.02 + 0.4);
+        vec4 fragColor = mix(vec4(0.0), col, pow(glow * 2.0, 4.0));
+        
+        // Boost intensity for HDR Bloom
+        gl_FragColor = fragColor * 4.0;
+    }
+  `
+});
+
+const jetpackFlameMesh = new THREE.Mesh(new THREE.PlaneGeometry(1.5, 3.0), jetpackFlameMat);
+jetpackFlameMesh.visible = false;
+scene.add(jetpackFlameMesh);
+
 
 // Three.js Points object for rendering
 const particleGeo = new THREE.BufferGeometry();
@@ -634,7 +669,7 @@ function tickParticles(delta) {
     colAttr.array[i * 3 + 0] = pColor[i * 3 + 0];
     colAttr.array[i * 3 + 1] = pColor[i * 3 + 1];
     colAttr.array[i * 3 + 2] = pColor[i * 3 + 2];
-    szAttr.array[i] = pData[d + 8]; 
+    szAttr.array[i] = pData[d + 8];
     lifeAttr.array[i] = life * life; // quadratic fade
 
     liveCount++;
@@ -741,7 +776,7 @@ function updateProjectiles(delta) {
       // Auto-fire at full charge
       if (chargeT >= 1.0) {
         spawnProjectile(1.0);
-        mouseDownTime = null; 
+        mouseDownTime = null;
         isCharging = false;
         if (sfx.charge && sfx.charge.isPlaying) sfx.charge.stop();
         chargeLight.intensity = 0;
@@ -807,7 +842,7 @@ function updateProjectiles(delta) {
       const ray = new THREE.Raycaster(sweepOrigin, sweepDir, 0, sweepDist + proj.radius + 0.1);
       ray.layers.set(0); // Only intersect environment
       const hits = ray.intersectObject(environmentMesh, true);
-      
+
       // Check shield collision if active (One-way: only blocks incoming)
       let shieldHit = null;
       if (shieldActive && shieldMesh) {
@@ -942,9 +977,9 @@ function updatePhysics(delta) {
         } else {
           // Robust fallback: spawn directly under the robot chassis
           emitJetpackParticles(
-            playerGroup.position.x, 
-            playerGroup.position.y + 0.2, 
-            playerGroup.position.z, 
+            playerGroup.position.x,
+            playerGroup.position.y + 0.2,
+            playerGroup.position.z,
             playerVelocity.x, playerVelocity.y, playerVelocity.z
           );
         }
@@ -962,7 +997,7 @@ function updatePhysics(delta) {
     // ── SFX Sync ─────────────────────────────────────────────────────────────
     if (s === 0) {
       const isMoving = Math.abs(moveDir.x) > 0.1 || Math.abs(moveDir.z) > 0.1;
-      
+
       // Movement
       if (isMoving && playerOnFloor) {
         if (keys.shift) {
@@ -1082,7 +1117,7 @@ function updatePhysics(delta) {
 
 const loader = new GLTFLoader();
 
-loader.load('https://pub-a56d70d158b1414d83c3856ea210601c.r2.dev/EgyptMap_GLB.glb', gltf => {
+loader.load('https://pub-a56d70d158b1414d83c3856ea210601c.r2.dev/map.glb', gltf => {
   const model = gltf.scene;
   model.updateMatrixWorld(true);
   model.traverse(child => {
@@ -1182,7 +1217,7 @@ function animate() {
     if (shieldReveal > 0) setShieldReveal(shieldReveal - delta * 2.5);
   } else {
     // Hidden
-    setShieldReveal(1.0); 
+    setShieldReveal(1.0);
   }
   updateShield(delta);
 
@@ -1234,26 +1269,26 @@ function animate() {
       // Common aerial dangling logic
       const horizontalVel = new THREE.Vector2(playerVelocity.x, playerVelocity.z);
       const speed = horizontalVel.length();
-      
+
       // Kill animation influence to allow manual dangling
       if (runAction) runAction.setEffectiveWeight(0.0);
 
       // Lean body slightly based on movement
       robotBones.body.rotation.x = isJetpacking ? 0.3 : (speed * 0.02);
-      
+
       // Vertical dangle swing (more pronounced)
       const swing = Math.sin(clock.elapsedTime * 3.0) * 0.12;
       const verticalDrag = Math.max(-0.7, Math.min(0.7, -playerVelocity.y * 0.05));
-      
+
       robotBones.rootLegs.forEach((l, i) => {
         // Reset from any animation state first
         l.rotation.set(0, 0, 0);
         // Extend downwards & apply drag
         l.rotation.x = isJetpacking ? -0.5 : -0.3;
         l.rotation.x += verticalDrag + swing;
-        
+
         // Sway opposite to movement direction (local space)
-        l.rotation.z = (Math.cos(clock.elapsedTime * 2.0 + i) * 0.08); 
+        l.rotation.z = (Math.cos(clock.elapsedTime * 2.0 + i) * 0.08);
       });
 
       if (isJetpacking) {
