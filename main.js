@@ -1180,7 +1180,7 @@ function animate() {
     // Animation control
     if (runAction) {
       const isTurning = Math.abs(diff) > 0.05;
-      if (isMoving || (isTurning && playerOnFloor)) {
+      if (playerOnFloor && (isMoving || isTurning)) {
         runAction.paused = false;
         const targetScale = isMoving ? (keys.shift ? 2.0 : 1.0) : 0.6; // Slower shuffle for turns
         runAction.setEffectiveTimeScale(targetScale);
