@@ -13,8 +13,8 @@ THREE.Mesh.prototype.raycast = acceleratedRaycast;
 
 // ─── Renderer ─────────────────────────────────────────────────────────────
 const scene = new THREE.Scene();
-scene.background = new THREE.Color(0x87CEEB);
-scene.fog = new THREE.FogExp2(0x87CEEB, 0.005);
+scene.background = new THREE.Color(0xd4e3f0);
+scene.fog = new THREE.FogExp2(0xe6d1b3, 0.001); // Light desert haze
 
 const camera = new THREE.PerspectiveCamera(75, innerWidth / innerHeight, 0.1, 1000);
 camera.layers.enable(1); // Projectiles / VFX
@@ -27,14 +27,14 @@ renderer.shadowMap.enabled = true;
 renderer.shadowMap.type = THREE.PCFSoftShadowMap;
 renderer.outputColorSpace = THREE.SRGBColorSpace;
 renderer.toneMapping = THREE.ACESFilmicToneMapping;
-renderer.toneMappingExposure = 1.0;
+renderer.toneMappingExposure = 0.85;
 document.body.appendChild(renderer.domElement);
 
 // ─── Post Processing ──────────────────────────────────────────────────────
 const renderScene = new RenderPass(scene, camera);
-const bloomPass = new UnrealBloomPass(new THREE.Vector2(innerWidth, innerHeight), 0.6, 0.4, 0.85);
-bloomPass.threshold = 0.4;
-bloomPass.strength = 0.6;
+const bloomPass = new UnrealBloomPass(new THREE.Vector2(innerWidth, innerHeight), 0.4, 0.4, 0.9);
+bloomPass.threshold = 0.6;
+bloomPass.strength = 0.4;
 bloomPass.radius = 0.5;
 
 const composer = new EffectComposer(renderer);
@@ -42,21 +42,21 @@ composer.addPass(renderScene);
 composer.addPass(bloomPass);
 composer.addPass(new OutputPass());
 
-// ─── Static lights ─────────────────────────────────────────────────────────
-const ambientLight = new THREE.AmbientLight(0xffffff, 0.5);
+// ─── Desert Lighting ───────────────────────────────────────────────────────
+const ambientLight = new THREE.AmbientLight(0xddeeff, 0.4); // Cool skylight fill
 scene.add(ambientLight);
 
-const dirLight = new THREE.DirectionalLight(0xffffff, 0.5);
-dirLight.position.set(50, 100, 50);
+const dirLight = new THREE.DirectionalLight(0xfff4e0, 1.2); // Warm sun
+dirLight.position.set(100, 150, 100);
 dirLight.castShadow = true;
 dirLight.shadow.mapSize.width = 4096;
 dirLight.shadow.mapSize.height = 4096;
-dirLight.shadow.camera.near = 0.5;
-dirLight.shadow.camera.far = 500;
-dirLight.shadow.camera.left = -100;
-dirLight.shadow.camera.right = 100;
-dirLight.shadow.camera.top = 100;
-dirLight.shadow.camera.bottom = -100;
+dirLight.shadow.camera.near = 1;
+dirLight.shadow.camera.far = 1000;
+dirLight.shadow.camera.left = -200;
+dirLight.shadow.camera.right = 200;
+dirLight.shadow.camera.top = 200;
+dirLight.shadow.camera.bottom = -200;
 scene.add(dirLight);
 
 // ─── Physics constants ─────────────────────────────────────────────────────
