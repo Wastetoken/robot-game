@@ -488,24 +488,24 @@ function emitChargeParticles(px, py, pz, charge) {
 
 function emitJetpackParticles(px, py, pz, vx, vy, vz) {
   // Dense plasma exhaust
-  const count = 4;
+  const count = 6;
   for (let k = 0; k < count; k++) {
-    const spread = 10.15;
-    const life = 0.15 + Math.random() * 0.15;
-    const size = 0.1 + Math.random() * 0.15;
+    const spread = 0.08;
+    const life = 0.2 + Math.random() * 0.4;
+    const size = 0.12 + Math.random() * 0.18;
     emitParticle(
       px + (Math.random() - 0.5) * spread,
       py + (Math.random() - 0.5) * spread,
       pz + (Math.random() - 0.5) * spread,
-      vx + (Math.random() - 0.5) * 0.5,
-      vy - 2.0 - Math.random() * 2.0, // strong downward push
-      vz + (Math.random() - 0.5) * 0.5,
+      vx + (Math.random() - 0.5) * 1.0,
+      vy - 12.0 - Math.random() * 6.0, // Violent downward thrust
+      vz + (Math.random() - 0.5) * 1.0,
       0, life, size,
-      0.2, 0.6, 1.0 // Plasma Blue
+      0.1, 0.7, 1.0 // Plasma Cyan/Blue
     );
-    // Core white hot
-    if (Math.random() > 0.5) {
-      emitParticle(px, py, pz, vx * 0.5, vy - 4.0, vz * 0.5, 0, 0.1, 0.2, 1, 1, 1);
+    // Core white hot spark
+    if (Math.random() > 0.4) {
+      emitParticle(px, py, pz, vx, vy - 15.0, vz, 0, 0.1, 0.2, 1, 1, 1);
     }
   }
 }
