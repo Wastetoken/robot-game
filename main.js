@@ -12,6 +12,37 @@ THREE.BufferGeometry.prototype.computeBoundsTree = computeBoundsTree;
 THREE.BufferGeometry.prototype.disposeBoundsTree = disposeBoundsTree;
 THREE.Mesh.prototype.raycast = acceleratedRaycast;
 
+// ─── Audio System ──────────────────────────────────────────────────────────
+const listener = new THREE.AudioListener();
+camera.add(listener);
+
+const sfx = {
+  walking: new THREE.PositionalAudio(listener),
+  running: new THREE.PositionalAudio(listener),
+  jetpack: new THREE.PositionalAudio(listener),
+  charge: new THREE.PositionalAudio(listener),
+  fire: new THREE.PositionalAudio(listener),
+  shield: new THREE.PositionalAudio(listener),
+  servo: new THREE.PositionalAudio(listener)
+};
+
+const audioLoader = new THREE.AudioLoader();
+const loadSFX = (name, url, loop = false, vol = 0.5) => {
+  audioLoader.load(url, buffer => {
+    sfx[name].setBuffer(buffer);
+    sfx[name].setLoop(loop);
+    sfx[name].setVolume(vol);
+  });
+};
+
+loadSFX('walking', 'SFX/Movement1.mp3', true, 0.4);
+loadSFX('running', 'SFX/Movement2.mp3', true, 0.6);
+loadSFX('jetpack', 'SFX/Flying.mp3', true, 0.5);
+loadSFX('charge', 'SFX/HoldFire.mp3', true, 0.5);
+loadSFX('fire', 'SFX/SingleFire.mp3', false, 0.7);
+loadSFX('shield', 'SFX/Shield.wav', false, 0.6);
+loadSFX('servo', 'SFX/Mouse-Rotation.mp3', true, 0.3);
+
 // ─── Renderer ─────────────────────────────────────────────────────────────
 const scene = new THREE.Scene();
 scene.background = new THREE.Color(0xB5F8FF);
@@ -84,6 +115,8 @@ let muzzlePoint = null;
 let jetpackLight = null;
 let isJetpacking = false;
 let shieldActive = false;
+let isMouseMoving = false;
+let mouseMoveTimer = 0;
 const robotBones = { body: null, rootLegs: [] };
 
 // ─── Camera rig ───────────────────────────────────────────────────────────
@@ -116,6 +149,10 @@ document.addEventListener('keydown', e => {
     if (shieldActive) {
       setShieldReveal(1.0); // Replay dissolve on activation
     }
+    if (sfx.shield.buffer) {
+      if (sfx.shield.isPlaying) sfx.shield.stop();
+      sfx.shield.play();
+    }
   }
 });
 document.addEventListener('keyup', e => {
@@ -146,6 +183,11 @@ document.addEventListener('mousemove', e => {
   yaw -= (e.movementX || 0) * 0.002;
   pitch -= (e.movementY || 0) * 0.002;
   pitch = Math.max(-Math.PI / 2 + 0.05, Math.min(Math.PI / 2 - 0.05, pitch));
+  
+  if (Math.abs(e.movementX) > 0.1 || Math.abs(e.movementY) > 0.1) {
+    isMouseMoving = true;
+    mouseMoveTimer = 0.1; // maintain for 100ms
+  }
 });
 
 // ══════════════════════════════════════════════════════════════════════════════
@@ -243,6 +285,11 @@ function spawnProjectile(charge) {
   const isCharged = charge > 0.15;
   const speed = isCharged ? (5 + charge * 5) : 10;
   const radius = isCharged ? (0.008 + charge * 0.32) : 0.006;
+
+  if (!isCharged && sfx.fire.buffer) {
+    if (sfx.fire.isPlaying) sfx.fire.stop();
+    sfx.fire.play();
+  }
 
   proj.active = true;
   proj.charge = charge;
@@ -644,6 +691,10 @@ function updateProjectiles(delta) {
       isCharging = true;
       chargeT = Math.min(held / MAX_CHARGE_TIME, 1.0);
 
+      if (sfx.charge.buffer && !sfx.charge.isPlaying) {
+        sfx.charge.play();
+      }
+
       // UI update
       chargeBar.style.display = 'block';
       chargeFill.style.width = (chargeT * 100) + '%';
@@ -879,6 +930,39 @@ function updatePhysics(delta) {
 
     playerGroup.position.addScaledVector(playerVelocity, subDelta);
 
+    // ── SFX Sync ─────────────────────────────────────────────────────────────
+    if (s === 0) {
+      const isMoving = Math.abs(moveDir.x) > 0.1 || Math.abs(moveDir.z) > 0.1;
+      
+      // Movement
+      if (isMoving && playerOnFloor) {
+        if (keys.shift) {
+          if (!sfx.running.isPlaying) sfx.running.play();
+          if (sfx.walking.isPlaying) sfx.walking.stop();
+        } else {
+          if (!sfx.walking.isPlaying) sfx.walking.play();
+          if (sfx.running.isPlaying) sfx.running.stop();
+        }
+      } else {
+        if (sfx.walking.isPlaying) sfx.walking.stop();
+        if (sfx.running.isPlaying) sfx.running.stop();
+      }
+
+      // Jetpack
+      if (isJetpacking) {
+        if (!sfx.jetpack.isPlaying) sfx.jetpack.play();
+      } else {
+        if (sfx.jetpack.isPlaying) sfx.jetpack.stop();
+      }
+
+      // Servo (Mouse rotation while still)
+      if (!isMoving && playerOnFloor && isMouseMoving) {
+        if (!sfx.servo.isPlaying) sfx.servo.play();
+      } else {
+        if (sfx.servo.isPlaying) sfx.servo.stop();
+      }
+    }
+
     // Collision Sweep
     const crouchH = keys.ctrl ? CAP_HEIGHT * 0.6 : CAP_HEIGHT;
     const capsuleStart = new THREE.Vector3(0, CAP_RADIUS, 0).add(playerGroup.position);
@@ -1029,6 +1113,9 @@ loader.load('https://pub-a56d70d158b1414d83c3856ea210601c.r2.dev/orb-ROBOT.glb',
   playerGroup.add(shieldGroup);
   shieldGroup.position.set(0, 0.7, 0); // Center on robot
 
+  // Attach positional audio to robot
+  Object.values(sfx).forEach(sound => playerGroup.add(sound));
+
   mixer = new THREE.AnimationMixer(robotModel);
   let clip = gltf.animations.find(c => /run|walk/i.test(c.name)) || gltf.animations[0];
   if (clip) {
@@ -1061,6 +1148,12 @@ function animate() {
   updatePhysics(delta);
   updateProjectiles(delta);
   tickParticles(delta);
+
+  // Mouse move timeout
+  if (mouseMoveTimer > 0) {
+    mouseMoveTimer -= delta;
+    if (mouseMoveTimer <= 0) isMouseMoving = false;
+  }
 
   // Shield Reveal Logic
   if (shieldActive) {

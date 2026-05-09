@@ -13,8 +13,8 @@
 import * as THREE from 'three';
 
 export const SHIELD_CONFIG = {
-  radius: 1.8, maxHits: 6, posY: 2.0,
-  hexScale: 3.0, hexOpacity: 0.13, showHex: true, edgeWidth: 0.06,
+  radius: 0.7, maxHits: 6, posY: 2.0,
+  hexScale: 10.0, hexOpacity: 0.13, showHex: true, edgeWidth: 0.06,
   fresnelPower: 1.8, fresnelStrength: 1.75,
   color: '#26aeff', opacity: 0.76, fadeStart: -1.0,
   flashSpeed: 0.6, flashIntensity: 0.11,
