@@ -946,12 +946,22 @@ function updatePhysics(delta) {
     if (isJetpacking) {
       playerVelocity.y += JETPACK_FORCE * subDelta;
       if (s === 0) {
-        // Particles from each leg
-        const pos = _tempV1;
-        robotBones.rootLegs.forEach(leg => {
-          leg.getWorldPosition(pos);
-          emitJetpackParticles(pos.x, pos.y, pos.z, playerVelocity.x, playerVelocity.y, playerVelocity.z);
-        });
+        // Particles from each leg, or fallback to player base if bones missing
+        if (robotModel && robotBones.rootLegs && robotBones.rootLegs.length > 0) {
+          const pos = _tempV1;
+          robotBones.rootLegs.forEach(leg => {
+            leg.getWorldPosition(pos);
+            emitJetpackParticles(pos.x, pos.y, pos.z, playerVelocity.x, playerVelocity.y, playerVelocity.z);
+          });
+        } else {
+          // Robust fallback: spawn directly under the robot chassis
+          emitJetpackParticles(
+            playerGroup.position.x, 
+            playerGroup.position.y + 0.2, 
+            playerGroup.position.z, 
+            playerVelocity.x, playerVelocity.y, playerVelocity.z
+          );
+        }
         if (jetpackLight) {
           jetpackLight.intensity = 20.0 + Math.random() * 115.0;
           jetpackLight.position.copy(playerGroup.position).y += 0.0006;
