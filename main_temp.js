@@ -1,4 +1,4 @@
-import * as THREE from 'three';
+﻿import * as THREE from 'three';
 import { GLTFLoader } from 'three/addons/loaders/GLTFLoader.js';
 import { computeBoundsTree, disposeBoundsTree, acceleratedRaycast, ExtendedTriangle } from 'three-mesh-bvh';
 import { EffectComposer } from 'three/addons/postprocessing/EffectComposer.js';
@@ -7,7 +7,7 @@ import { UnrealBloomPass } from 'three/addons/postprocessing/UnrealBloomPass.js'
 import { OutputPass } from 'three/addons/postprocessing/OutputPass.js';
 import { initShield, updateShield, updateShieldConfig, registerShieldHit, shieldGroup, shieldLife, setShieldLife, shieldReveal, setShieldReveal, shieldMesh } from './shield.js';
 
-// ─── BVH extensions ────────────────────────────────────────────────────────
+// â”€â”€â”€ BVH extensions â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€
 THREE.BufferGeometry.prototype.computeBoundsTree = computeBoundsTree;
 THREE.BufferGeometry.prototype.disposeBoundsTree = disposeBoundsTree;
 THREE.Mesh.prototype.raycast = acceleratedRaycast;
@@ -207,7 +207,7 @@ try {
   console.warn('Could not load saved controls', err);
 }
 
-// ─── Renderer ─────────────────────────────────────────────────────────────
+// â”€â”€â”€ Renderer â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€
 const scene = new THREE.Scene();
 scene.background = new THREE.Color(GAME_PARAMS.scene.background);
 scene.fog = new THREE.FogExp2(GAME_PARAMS.scene.fogColor, GAME_PARAMS.scene.fogDensity);
@@ -216,7 +216,7 @@ const camera = new THREE.PerspectiveCamera(GAME_PARAMS.camera.baseFOV, innerWidt
 camera.layers.enable(1);
 camera.layers.enable(2);
 
-// ─── Audio System ──────────────────────────────────────────────────────────
+// â”€â”€â”€ Audio System â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€
 const listener = new THREE.AudioListener();
 camera.add(listener);
 
@@ -257,7 +257,7 @@ renderer.toneMapping = THREE.ACESFilmicToneMapping;
 renderer.toneMappingExposure = GAME_PARAMS.scene.exposure;
 document.body.appendChild(renderer.domElement);
 
-// ─── Post Processing ──────────────────────────────────────────────────────
+// â”€â”€â”€ Post Processing â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€
 const renderScene = new RenderPass(scene, camera);
 const bloomPass = new UnrealBloomPass(new THREE.Vector2(innerWidth, innerHeight), 0.4, 0.4, 0.9);
 bloomPass.threshold = GAME_PARAMS.scene.bloomThreshold;
@@ -269,7 +269,7 @@ composer.addPass(renderScene);
 composer.addPass(bloomPass);
 composer.addPass(new OutputPass());
 
-// ─── Lighting ───────────────────────────────────────────────────────────────
+// â”€â”€â”€ Lighting â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€
 const ambientLight = new THREE.AmbientLight(GAME_PARAMS.lighting.ambientColor, GAME_PARAMS.lighting.ambientIntensity);
 scene.add(ambientLight);
 
@@ -286,18 +286,18 @@ dirLight.shadow.camera.top = 200;
 dirLight.shadow.camera.bottom = -200;
 scene.add(dirLight);
 
-// ─── Physics constants ─────────────────────────────────────────────────────
+// â”€â”€â”€ Physics constants â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€
 let environmentMesh = null;
 const playerVelocity = new THREE.Vector3();
 let playerOnFloor = false;
 const BASE_FOV = GAME_PARAMS.camera.baseFOV;
 
-// ─── Player group ──────────────────────────────────────────────────────────
+// â”€â”€â”€ Player group â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€
 const playerGroup = new THREE.Group();
 playerGroup.position.set(-50.0, 1.5, 0.0);
 scene.add(playerGroup);
 
-// ─── Robot model & bones ───────────────────────────────────────────────────
+// â”€â”€â”€ Robot model & bones â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€
 let robotModel = null, mixer = null, runAction = null;
 let muzzlePoint = null;
 let jetpackLight = null;
@@ -308,7 +308,7 @@ let isMouseMoving = false;
 let mouseMoveTimer = 0;
 const robotBones = { body: null, rootLegs: [] };
 
-// ─── Camera rig ───────────────────────────────────────────────────────────
+// â”€â”€â”€ Camera rig â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€
 const cameraContainer = new THREE.Group();
 scene.add(cameraContainer);
 
@@ -322,7 +322,7 @@ cameraPivot.add(cameraRig);
 cameraRig.position.set(0, 0, GAME_PARAMS.camera.maxDistance);
 cameraRig.add(camera);
 
-// ─── Input ────────────────────────────────────────────────────────────────
+// â”€â”€â”€ Input â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€
 const keys = { w: false, a: false, s: false, d: false, space: false, shift: false, ctrl: false };
 document.addEventListener('keydown', e => {
   if (e.code === 'KeyW') keys.w = true;
@@ -332,7 +332,7 @@ document.addEventListener('keydown', e => {
   if (e.code === 'Space') keys.space = true;
   if (e.code === 'ShiftLeft' || e.code === 'ShiftRight') keys.shift = true;
   if (e.code === 'ControlLeft' || e.code === 'ControlRight' || e.code === 'KeyC') keys.ctrl = true;
-
+  
   if (e.code === 'KeyQ') {
     shieldActive = !shieldActive;
     if (shieldActive) {
@@ -354,25 +354,15 @@ document.addEventListener('keyup', e => {
   if (e.code === 'ControlLeft' || e.code === 'ControlRight' || e.code === 'KeyC') keys.ctrl = false;
 });
 
-// ─── Pointer lock ─────────────────────────────────────────────────────────
+// â”€â”€â”€ Pointer lock â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€
 const chargeBar = document.getElementById('charge-bar');
 const chargeFill = document.getElementById('charge-fill');
+const instructions = document.getElementById('instructions');
 let isLocked = false;
-document.body.requestPointerLock(); // Auto-lock on load
+instructions.addEventListener('click', () => document.body.requestPointerLock());
 document.addEventListener('pointerlockchange', () => {
   isLocked = document.pointerLockElement === document.body;
-});
-
-// M key toggles pointer lock on/off for accessing settings
-document.addEventListener('keydown', e => {
-  if (e.code === 'KeyM') {
-    e.preventDefault();
-    if (isLocked) {
-      document.exitPointerLock();
-    } else {
-      document.body.requestPointerLock();
-    }
-  }
+  instructions.style.display = isLocked ? 'none' : 'flex';
 });
 
 let pitch = 0, yaw = 0;
@@ -385,16 +375,16 @@ document.addEventListener('mousemove', e => {
     -Math.PI / 2 + GAME_PARAMS.camera.pitchLimitPadding,
     Math.min(Math.PI / 2 - GAME_PARAMS.camera.pitchLimitPadding, pitch),
   );
-
+  
   if (Math.abs(e.movementX) > 0.1 || Math.abs(e.movementY) > 0.1) {
     isMouseMoving = true;
     mouseMoveTimer = 0.1;
   }
 });
 
-// ══════════════════════════════════════════════════════════════════════════════
+// â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•
 // PROJECTILE SYSTEM
-// ══════════════════════════════════════════════════════════════════════════════
+// â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•
 
 const MAX_PROJ = 64;
 const projectiles = Array.from({ length: MAX_PROJ }, () => ({
@@ -586,33 +576,33 @@ window.addEventListener('mouseup', e => {
   chargeBar.style.display = 'none';
 });
 
-// ─── Jetpack flame ────────────────────────────────────────────────────────
+// â”€â”€â”€ Jetpack flame â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€
 const jetpackFlameMat = new THREE.ShaderMaterial({
   transparent: true,
   depthWrite: false,
   side: THREE.BackSide,
   blending: THREE.AdditiveBlending,
   uniforms: {
-    iTime: { value: 0.0 },
+    iTime:      { value: 0.0 },
     iIntensity: { value: 0.0 },
     iCameraPos: { value: new THREE.Vector3() },
-    flameHeight: { value: 2.2 },
-    flameWidth: { value: 1.0 },
-    flameTurbulence: { value: 0.25 },
-    flameNoiseScale: { value: 1.0 },
-    flameCoreSize: { value: 0.25 },
-    coreColor: { value: new THREE.Vector3(1.0, 0.55, 0.05) },
-    midColor: { value: new THREE.Vector3(0.1, 0.45, 1.0) },
+    flameHeight:    { value: 2.2 },
+    flameWidth:     { value: 1.0 },
+    flameTurbulence:{ value: 0.25 },
+    flameNoiseScale:{ value: 1.0 },
+    flameCoreSize:  { value: 0.25 },
+    coreColor:      { value: new THREE.Vector3(1.0, 0.55, 0.05) },
+    midColor:       { value: new THREE.Vector3(0.1, 0.45, 1.0) },
     lightningSpeed: { value: 8.0 },
     lightningChaos: { value: 0.4 },
-    lightningDensity: { value: 3.0 },
-    lightningArc: { value: 0.6 },
-    lightningThickness: { value: 0.08 },
-    lightningIntensity: { value: 1.0 },
-    raymarchSteps: { value: 64 },
-    raymarchPrecision: { value: 0.02 },
-    glowPower: { value: 4.0 },
-    colorBoost: { value: 6.0 },
+    lightningDensity:{ value: 3.0 },
+    lightningArc:    { value: 0.6 },
+    lightningThickness:{ value: 0.08 },
+    lightningIntensity:{ value: 1.0 },
+    raymarchSteps:  { value: 64 },
+    raymarchPrecision:{ value: 0.02 },
+    glowPower:       { value: 4.0 },
+    colorBoost:      { value: 6.0 },
   },
   vertexShader: `
     varying vec3 vLocalPos;
@@ -727,11 +717,11 @@ const jetpackFlameMat = new THREE.ShaderMaterial({
   `
 });
 
-const jetpackFlameGeo = new THREE.SphereGeometry(1.0, 0.2, 1.0);
+const jetpackFlameGeo  = new THREE.SphereGeometry(1.0, 0.2, 1.0);
 jetpackFlameGeo.applyMatrix4(new THREE.Matrix4().makeScale(3.0, 5.2, 3.0));
 
 const jetpackFlameMesh = new THREE.Mesh(jetpackFlameGeo, jetpackFlameMat);
-jetpackFlameMesh.visible = false;
+jetpackFlameMesh.visible       = false;
 jetpackFlameMesh.frustumCulled = false;
 jetpackFlameMesh.layers.set(1);
 scene.add(jetpackFlameMesh);
@@ -739,21 +729,13 @@ scene.add(jetpackFlameMesh);
 function updateJetpackFlame(delta) {
   jetpackFlameMat.uniforms.iTime.value += delta;
 
-  const u = jetpackFlameMat.uniforms.iIntensity;
+  const u      = jetpackFlameMat.uniforms.iIntensity;
   const target = jetpackActive ? 1.0 : 0.0;
-  const rate = jetpackActive ? GAME_PARAMS.jetpack.fadeInRate : GAME_PARAMS.jetpack.fadeOutRate;
+  const rate   = jetpackActive ? GAME_PARAMS.jetpack.fadeInRate : GAME_PARAMS.jetpack.fadeOutRate;
   u.value += (target - u.value) * (1 - Math.exp(-rate * delta));
 
-  // Clamp to prevent runaway values
-  u.value = Math.max(0, Math.min(1, u.value));
-
   jetpackFlameMesh.visible = u.value > 0.01;
-  if (!jetpackFlameMesh.visible) {
-    // Reset rotation when hidden
-    jetpackFlameMesh.rotation.x = 0;
-    jetpackFlameMesh.rotation.z = 0;
-    return;
-  }
+  if (!jetpackFlameMesh.visible) return;
 
   jetpackFlameMesh.position.copy(playerGroup.position);
   jetpackFlameMesh.position.y += GAME_PARAMS.jetpack.positionOffsetY;
@@ -761,38 +743,12 @@ function updateJetpackFlame(delta) {
   const localCam = jetpackFlameMesh.worldToLocal(camera.getWorldPosition(new THREE.Vector3()));
   jetpackFlameMat.uniforms.iCameraPos.value.copy(localCam);
 
-  // Calculate directional input intensity for reactive animation
-  const horizontalVel = new THREE.Vector2(playerVelocity.x, playerVelocity.z);
-  const speed = horizontalVel.length();
-  const hasInput = keys.w || keys.a || keys.s || keys.d;
-  const inputIntensity = hasInput && jetpackActive ? Math.min(1, speed / (GAME_PARAMS.physics.speed * GAME_PARAMS.physics.sprintMultiplier)) : 0;
-
-  // Dynamic scale based on thrust and input (only when jetpacking)
-  const thrust = jetpackActive ? Math.min(1, Math.abs(playerVelocity.y) / GAME_PARAMS.physics.maxJetVelocity) : 0;
-  const baseScale = GAME_PARAMS.jetpack.baseScale * u.value;
-  const dynamicScale = baseScale * (0.8 + thrust * 0.3 + inputIntensity * 0.2);
-
-  // Add reactive tilt based on movement direction (only when jetpacking with input)
-  if (jetpackActive && hasInput && speed > 0.1) {
-    const moveDir = new THREE.Vector3(playerVelocity.x, 0, playerVelocity.z).normalize();
-    const tiltAmount = inputIntensity * 0.12;
-    jetpackFlameMesh.rotation.x = -moveDir.z * tiltAmount;
-    jetpackFlameMesh.rotation.z = moveDir.x * tiltAmount;
-  } else {
-    // Smoothly return to neutral
-    jetpackFlameMesh.rotation.x += (0 - jetpackFlameMesh.rotation.x) * 8 * delta;
-    jetpackFlameMesh.rotation.z += (0 - jetpackFlameMesh.rotation.z) * 8 * delta;
-  }
-
-  jetpackFlameMesh.scale.setScalar(dynamicScale);
-
-  // Update shader uniforms - only boost intensity when actively jetpacking with input
-  jetpackFlameMat.uniforms.iIntensity.value = u.value * (jetpackActive ? (1 + inputIntensity * 0.3) : 1.0);
+  jetpackFlameMesh.scale.setScalar(GAME_PARAMS.jetpack.baseScale * u.value);
 }
 
-// ══════════════════════════════════════════════════════════════════════════════
+// â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•
 // PARTICLE SYSTEM
-// ══════════════════════════════════════════════════════════════════════════════
+// â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•
 
 const MAX_PARTICLES = 16000;
 const PARTICLE_STRIDE = 9;
@@ -1009,13 +965,13 @@ function tickParticles(delta) {
   lifeAttr.needsUpdate = true;
 }
 
-// ─── Charge light ─────────────────────────────────────────────────────────
+// â”€â”€â”€ Charge light â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€
 const chargeLight = new THREE.PointLight(0x00ffff, 0, 4);
 chargeLight.castShadow = false;
 playerGroup.add(chargeLight);
 chargeLight.position.set(0.3, 0.7, -0.5);
 
-// ─── Collision helpers ────────────────────────────────────────────────────
+// â”€â”€â”€ Collision helpers â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€
 const _closestPt = new THREE.Vector3();
 const _chkSeg = new THREE.Line3();
 const _tempMat = new THREE.Matrix4();  // FIX: was missing, caused ReferenceError
@@ -1135,75 +1091,66 @@ function updateProjectiles(delta) {
 
     emitTrailParticles(proj);
 
-    // ─── Collision detection ───────────────────────────────────────
     if (environmentMesh) {
-      const speed = proj.velocity.length();
-      const sweepDirVec = new THREE.Vector3().subVectors(proj.position, proj.prevPosition);
-      const sweepDist = sweepDirVec.length();
+      const sweepOrigin = proj.prevPosition.clone();
+      const sweepDir = new THREE.Vector3().subVectors(proj.position, proj.prevPosition);
+      const sweepDist = sweepDir.length();
+      sweepDir.normalize();
 
-      const dir = sweepDist > 0.001
-        ? sweepDirVec.divideScalar(sweepDist)
-        : proj.velocity.clone().normalize();
-
-      // Cast from slightly behind prevPosition to well ahead of current position
-      const rayStart = proj.prevPosition.clone().addScaledVector(dir, -0.05);
-      const rayDist = sweepDist + speed * delta + 0.5 + proj.radius;
-      const ray = new THREE.Raycaster(rayStart, dir, 0, rayDist);
+      const ray = new THREE.Raycaster(sweepOrigin, sweepDir, 0, sweepDist + proj.radius + 0.1);
       ray.layers.set(0);
+      const hits = ray.intersectObject(environmentMesh, true);
 
-      const envHits = ray.intersectObject(environmentMesh, true);
-      if (envHits.length > 0) {
-        const hit = envHits[0];
-        const normal = hit.face
-          ? hit.face.normal.clone().transformDirection(hit.object.matrixWorld)
-          : new THREE.Vector3(0, 1, 0);
-        handleImpact(hit.point, normal, proj.charge, hit.object);
-        despawnProjectile(proj);
-        continue;
-      }
-
+      let shieldHit = null;
       if (shieldActive && shieldMesh) {
         const sHits = ray.intersectObject(shieldMesh);
         if (sHits.length > 0) {
           const sHit = sHits[0];
-          if (ray.ray.direction.dot(sHit.face.normal) < 0) {
-            handleImpact(sHit.point, sHit.face.normal, proj.charge, shieldMesh);
-            despawnProjectile(proj);
-            continue;
+          const dot = ray.ray.direction.dot(sHit.face.normal);
+          if (dot < 0 && (!hits.length || sHit.distance < hits[0].distance)) {
+            shieldHit = sHit;
           }
         }
       }
-    }
 
-    // Check player collision (only after projectile has traveled a bit)
-    if (proj.age > 0.2) {
-      _capS.set(0, GAME_PARAMS.physics.capsuleRadius, 0).add(playerGroup.position);
-      _capE.set(0, GAME_PARAMS.physics.capsuleHeight + GAME_PARAMS.physics.capsuleRadius, 0).add(playerGroup.position);
-      const playerRadius = GAME_PARAMS.physics.capsuleRadius + proj.radius;
+      if (shieldHit) {
+        handleImpact(shieldHit.point, shieldHit.face.normal, proj.charge, shieldMesh);
+        despawnProjectile(proj);
+        continue;
+      }
 
-      if (pointInCapsule(proj.position, _capS, _capE, playerRadius)) {
-        const normal = proj.position.clone().sub(playerGroup.position).normalize();
-        handleImpact(proj.position.clone(), normal, proj.charge, playerGroup);
+      if (hits.length > 0) {
+        const hit = hits[0];
+        const normal = hit.face ? hit.face.normal.clone().transformDirection(hit.object.matrixWorld) : new THREE.Vector3(0, 1, 0);
+        handleImpact(hit.point, normal, proj.charge, hit.object);
         despawnProjectile(proj);
         continue;
       }
     }
 
-    // Check projectile-projectile collisions (only for recently fired projectiles to save performance)
-    if (proj.age < 0.5) {
-      for (let j = pi + 1; j < projectiles.length; j++) {
-        const other = projectiles[j];
-        if (!other.active || other.age > 0.5) continue;
-        const d2 = proj.position.distanceToSquared(other.position);
-        const rSum = proj.radius + other.radius;
-        if (d2 < rSum * rSum) {
-          const midPt = proj.position.clone().lerp(other.position, 0.5);
-          const charge = Math.max(proj.charge, other.charge);
-          handleImpact(midPt, new THREE.Vector3(0, 1, 0), charge);
-          despawnProjectile(proj);
-          despawnProjectile(other);
-          break;
-        }
+    if (proj.age > 0.5) {
+      _capS.set(0, GAME_PARAMS.physics.capsuleRadius, 0).add(playerGroup.position);
+      _capE.set(0, GAME_PARAMS.physics.capsuleHeight + GAME_PARAMS.physics.capsuleRadius, 0).add(playerGroup.position);
+      if (pointInCapsule(proj.position, _capS, _capE, GAME_PARAMS.physics.capsuleRadius + proj.radius)) {
+        handleImpact(proj.position.clone(), new THREE.Vector3(0, 1, 0), proj.charge, playerGroup);
+        despawnProjectile(proj);
+        continue;
+      }
+    }
+  }
+
+  for (let i = 0; i < projectiles.length; i++) {
+    if (!projectiles[i].active) continue;
+    for (let j = i + 1; j < projectiles.length; j++) {
+      if (!projectiles[j].active) continue;
+      const d2 = projectiles[i].position.distanceToSquared(projectiles[j].position);
+      const rSum = projectiles[i].radius + projectiles[j].radius;
+      if (d2 < rSum * rSum) {
+        const midPt = projectiles[i].position.clone().lerp(projectiles[j].position, 0.5);
+        const charge = Math.max(projectiles[i].charge, projectiles[j].charge);
+        handleImpact(midPt, new THREE.Vector3(0, 1, 0), charge);
+        despawnProjectile(projectiles[i]);
+        despawnProjectile(projectiles[j]);
       }
     }
   }
@@ -1385,9 +1332,9 @@ function updatePhysics(delta) {
   cameraRig.position.z += (targetZ - cameraRig.position.z) * (1 - Math.exp(-GAME_PARAMS.camera.collisionSmooth * delta));
 }
 
-// ══════════════════════════════════════════════════════════════════════════════
+// â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•
 // ASSET LOADING
-// ══════════════════════════════════════════════════════════════════════════════
+// â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•
 
 function colorToVec3(hex) {
   const c = new THREE.Color(hex);
@@ -1463,7 +1410,7 @@ function applyGameParams() {
 function createControlPanel() {
   const panel = document.createElement('aside');
   panel.id = 'control-panel';
-  panel.innerHTML = '<div class="control-panel-header"><strong>Look Controls</strong><button type="button" data-action="toggle">Hide</button></div><div class="control-panel-body"></div><div class="control-panel-tip">Press <strong>M</strong> in-game to toggle mouse cursor</div><div class="control-panel-actions"><button type="button" data-action="save">Save</button><button type="button" data-action="reset">Reset</button></div>';
+  panel.innerHTML = '<div class="control-panel-header"><strong>Look Controls</strong><button type="button" data-action="toggle">Hide</button></div><div class="control-panel-body"></div><div class="control-panel-actions"><button type="button" data-action="save">Save</button><button type="button" data-action="reset">Reset</button></div>';
   document.body.appendChild(panel);
   const body = panel.querySelector('.control-panel-body');
   const groups = {
@@ -1636,9 +1583,9 @@ window.addEventListener('resize', () => {
   composer.setSize(innerWidth, innerHeight);
 });
 
-// ══════════════════════════════════════════════════════════════════════════════
+// â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•
 // MAIN LOOP
-// ══════════════════════════════════════════════════════════════════════════════
+// â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•
 
 const clock = new THREE.Clock();
 
@@ -1743,3 +1690,4 @@ function animate() {
 }
 
 animate();
+JSEOF
