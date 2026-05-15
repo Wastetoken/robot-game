@@ -10,6 +10,7 @@
 //   4. setShieldLife(0–1)             — drives color shift + HUD
 //   5. shieldGroup / shieldMesh       — transform/parent as needed
 //
+//
 import * as THREE from 'three';
 
 export const SHIELD_CONFIG = {
@@ -199,7 +200,8 @@ export function initShield(scene, overrides = {}) {
   shieldGroup.position.set(0, cfg.posY, 0);
   scene.add(shieldGroup);
 
-  shieldMesh = new THREE.Mesh(new THREE.SphereGeometry(cfg.radius, 64, 64), _mat);
+  shieldMesh = new THREE.Mesh(new THREE.SphereGeometry(0.7, 64, 64), _mat);
+  shieldMesh.scale.setScalar(cfg.radius / 0.7);
   shieldMesh.renderOrder = 2;
   shieldGroup.add(shieldMesh);
 }
@@ -210,6 +212,58 @@ export function updateShield(delta) {
   _mat.uniforms.uTime.value = _clock;
   _mat.uniforms.uLife.value = shieldLife;
   _mat.uniforms.uReveal.value = shieldReveal;
+}
+
+export function updateShieldConfig(overrides = {}) {
+  Object.assign(SHIELD_CONFIG, overrides);
+  if (shieldGroup && Number.isFinite(SHIELD_CONFIG.posY)) {
+    shieldGroup.position.y = SHIELD_CONFIG.posY;
+  }
+  if (shieldMesh && Number.isFinite(SHIELD_CONFIG.radius)) {
+    shieldMesh.scale.setScalar(SHIELD_CONFIG.radius / 0.7);
+  }
+  if (!_mat) return;
+
+  const uniformMap = {
+    color: 'uColor',
+    hexScale: 'uHexScale',
+    edgeWidth: 'uEdgeWidth',
+    fresnelPower: 'uFresnelPower',
+    fresnelStrength: 'uFresnelStrength',
+    opacity: 'uOpacity',
+    flashSpeed: 'uFlashSpeed',
+    flashIntensity: 'uFlashIntensity',
+    noiseScale: 'uNoiseScale',
+    noiseEdgeColor: 'uNoiseEdgeColor',
+    noiseEdgeWidth: 'uNoiseEdgeWidth',
+    noiseEdgeIntensity: 'uNoiseEdgeIntensity',
+    noiseEdgeSmoothness: 'uNoiseEdgeSmoothness',
+    hexOpacity: 'uHexOpacity',
+    flowScale: 'uFlowScale',
+    flowSpeed: 'uFlowSpeed',
+    flowIntensity: 'uFlowIntensity',
+    hitRingSpeed: 'uHitRingSpeed',
+    hitRingWidth: 'uHitRingWidth',
+    hitMaxRadius: 'uHitMaxRadius',
+    hitDuration: 'uHitDuration',
+    hitIntensity: 'uHitIntensity',
+    hitImpactRadius: 'uHitImpactRadius',
+    fadeStart: 'uFadeStart',
+  };
+
+  for (const [key, uniformName] of Object.entries(uniformMap)) {
+    if (!(key in overrides) || !_mat.uniforms[uniformName]) continue;
+    const uniform = _mat.uniforms[uniformName];
+    if (uniform.value && uniform.value.isColor) {
+      uniform.value.set(overrides[key]);
+    } else {
+      uniform.value = overrides[key];
+    }
+  }
+
+  if ('showHex' in overrides && _mat.uniforms.uShowHex) {
+    _mat.uniforms.uShowHex.value = overrides.showHex ? 1.0 : 0.0;
+  }
 }
 
 export function registerShieldHit(worldPoint) {

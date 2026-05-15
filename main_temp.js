@@ -276,8 +276,8 @@ scene.add(ambientLight);
 const dirLight = new THREE.DirectionalLight(GAME_PARAMS.lighting.sunColor, GAME_PARAMS.lighting.sunIntensity);
 dirLight.position.set(GAME_PARAMS.lighting.sunX, GAME_PARAMS.lighting.sunY, GAME_PARAMS.lighting.sunZ);
 dirLight.castShadow = true;
-dirLight.shadow.mapSize.width = 4096;
-dirLight.shadow.mapSize.height = 4096;
+dirLight.shadow.mapSize.width = 1024;
+dirLight.shadow.mapSize.height = 1024;
 dirLight.shadow.camera.near = 1;
 dirLight.shadow.camera.far = 500;
 dirLight.shadow.camera.left = -200;
@@ -332,7 +332,7 @@ document.addEventListener('keydown', e => {
   if (e.code === 'Space') keys.space = true;
   if (e.code === 'ShiftLeft' || e.code === 'ShiftRight') keys.shift = true;
   if (e.code === 'ControlLeft' || e.code === 'ControlRight' || e.code === 'KeyC') keys.ctrl = true;
-  
+
   if (e.code === 'KeyQ') {
     shieldActive = !shieldActive;
     if (shieldActive) {
@@ -375,7 +375,7 @@ document.addEventListener('mousemove', e => {
     -Math.PI / 2 + GAME_PARAMS.camera.pitchLimitPadding,
     Math.min(Math.PI / 2 - GAME_PARAMS.camera.pitchLimitPadding, pitch),
   );
-  
+
   if (Math.abs(e.movementX) > 0.1 || Math.abs(e.movementY) > 0.1) {
     isMouseMoving = true;
     mouseMoveTimer = 0.1;
@@ -583,26 +583,26 @@ const jetpackFlameMat = new THREE.ShaderMaterial({
   side: THREE.BackSide,
   blending: THREE.AdditiveBlending,
   uniforms: {
-    iTime:      { value: 0.0 },
+    iTime: { value: 0.0 },
     iIntensity: { value: 0.0 },
     iCameraPos: { value: new THREE.Vector3() },
-    flameHeight:    { value: 2.2 },
-    flameWidth:     { value: 1.0 },
-    flameTurbulence:{ value: 0.25 },
-    flameNoiseScale:{ value: 1.0 },
-    flameCoreSize:  { value: 0.25 },
-    coreColor:      { value: new THREE.Vector3(1.0, 0.55, 0.05) },
-    midColor:       { value: new THREE.Vector3(0.1, 0.45, 1.0) },
+    flameHeight: { value: 2.2 },
+    flameWidth: { value: 1.0 },
+    flameTurbulence: { value: 0.25 },
+    flameNoiseScale: { value: 1.0 },
+    flameCoreSize: { value: 0.25 },
+    coreColor: { value: new THREE.Vector3(1.0, 0.55, 0.05) },
+    midColor: { value: new THREE.Vector3(0.1, 0.45, 1.0) },
     lightningSpeed: { value: 8.0 },
     lightningChaos: { value: 0.4 },
-    lightningDensity:{ value: 3.0 },
-    lightningArc:    { value: 0.6 },
-    lightningThickness:{ value: 0.08 },
-    lightningIntensity:{ value: 1.0 },
-    raymarchSteps:  { value: 64 },
-    raymarchPrecision:{ value: 0.02 },
-    glowPower:       { value: 4.0 },
-    colorBoost:      { value: 6.0 },
+    lightningDensity: { value: 3.0 },
+    lightningArc: { value: 0.6 },
+    lightningThickness: { value: 0.08 },
+    lightningIntensity: { value: 1.0 },
+    raymarchSteps: { value: 64 },
+    raymarchPrecision: { value: 0.02 },
+    glowPower: { value: 4.0 },
+    colorBoost: { value: 6.0 },
   },
   vertexShader: `
     varying vec3 vLocalPos;
@@ -717,11 +717,11 @@ const jetpackFlameMat = new THREE.ShaderMaterial({
   `
 });
 
-const jetpackFlameGeo  = new THREE.SphereGeometry(1.0, 0.2, 1.0);
+const jetpackFlameGeo = new THREE.SphereGeometry(1.0, 0.2, 1.0);
 jetpackFlameGeo.applyMatrix4(new THREE.Matrix4().makeScale(3.0, 5.2, 3.0));
 
 const jetpackFlameMesh = new THREE.Mesh(jetpackFlameGeo, jetpackFlameMat);
-jetpackFlameMesh.visible       = false;
+jetpackFlameMesh.visible = false;
 jetpackFlameMesh.frustumCulled = false;
 jetpackFlameMesh.layers.set(1);
 scene.add(jetpackFlameMesh);
@@ -729,9 +729,9 @@ scene.add(jetpackFlameMesh);
 function updateJetpackFlame(delta) {
   jetpackFlameMat.uniforms.iTime.value += delta;
 
-  const u      = jetpackFlameMat.uniforms.iIntensity;
+  const u = jetpackFlameMat.uniforms.iIntensity;
   const target = jetpackActive ? 1.0 : 0.0;
-  const rate   = jetpackActive ? GAME_PARAMS.jetpack.fadeInRate : GAME_PARAMS.jetpack.fadeOutRate;
+  const rate = jetpackActive ? GAME_PARAMS.jetpack.fadeInRate : GAME_PARAMS.jetpack.fadeOutRate;
   u.value += (target - u.value) * (1 - Math.exp(-rate * delta));
 
   jetpackFlameMesh.visible = u.value > 0.01;

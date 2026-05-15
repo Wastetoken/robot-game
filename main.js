@@ -1,5 +1,6 @@
 import * as THREE from 'three';
 import { GLTFLoader } from 'three/addons/loaders/GLTFLoader.js';
+import { DRACOLoader } from 'three/addons/loaders/DRACOLoader.js';
 import { computeBoundsTree, disposeBoundsTree, acceleratedRaycast, ExtendedTriangle } from 'three-mesh-bvh';
 import { EffectComposer } from 'three/addons/postprocessing/EffectComposer.js';
 import { RenderPass } from 'three/addons/postprocessing/RenderPass.js';
@@ -12,49 +13,53 @@ THREE.BufferGeometry.prototype.computeBoundsTree = computeBoundsTree;
 THREE.BufferGeometry.prototype.disposeBoundsTree = disposeBoundsTree;
 THREE.Mesh.prototype.raycast = acceleratedRaycast;
 
-const CONTROL_STORAGE_KEY = 'orbRobotControls.v1';
+const CONTROL_STORAGE_KEY = 'orbRobotControls.v3';
 const GAME_PARAMS = {
   scene: {
     background: '#b5f8ff',
     fogColor: '#e6d1b3',
-    fogDensity: 0.01,
-    exposure: 0.8,
+    fogDensity: 0.0630,
+    exposure: 0.80,
     pixelRatio: Math.min(devicePixelRatio, 2),
     bloomThreshold: 0.9,
-    bloomStrength: 0.2,
+    bloomStrength: 0.20,
     bloomRadius: 0.05,
+  },
+  minimap: {
+    zoom: 5,
+    size: 100,
   },
   lighting: {
     ambientColor: '#ddeeff',
-    ambientIntensity: 0.4,
+    ambientIntensity: 1.78,
     sunColor: '#fff4e0',
-    sunIntensity: 1.2,
+    sunIntensity: 1.20,
     sunX: 100,
     sunY: 150,
     sunZ: 100,
   },
   physics: {
-    gravity: -30,
-    speed: 5.5,
-    sprintMultiplier: 1.8,
-    groundAcceleration: 35,
-    airAcceleration: 12,
-    jumpVelocity: 10,
-    jetpackForce: 40,
-    maxJetVelocity: 8,
-    frictionGround: 22,
-    frictionAir: 2.5,
+    gravity: -20,
+    speed: 18.0,
+    sprintMultiplier: 2.00,
+    groundAcceleration: 13,
+    airAcceleration: 10,
+    jumpVelocity: 2.10,
+    jetpackForce: 28,
+    maxJetVelocity: 5.30,
+    frictionGround: 30,
+    frictionAir: 5.20,
     physicsSubSteps: 8,
     capsuleHeight: 1.0,
     capsuleRadius: 0.3,
   },
   camera: {
-    baseFOV: 75,
+    baseFOV: 45,
     chargeFOV: 68,
-    mouseSensitivity: 0.002,
+    mouseSensitivity: 0.0020,
     pitchLimitPadding: 0.05,
-    pivotHeight: 0.9,
-    maxDistance: 3.0,
+    pivotHeight: 0.83,
+    maxDistance: 1.90,
     minDistance: 0.5,
     wallPadding: 0.2,
     rotationSmooth: 24,
@@ -67,7 +72,7 @@ const GAME_PARAMS = {
     rapidSpeed: 10,
     chargedSpeedBase: 5,
     chargedSpeedBoost: 5,
-    rapidRadius: 0.006,
+    rapidRadius: 0.0060,
     chargedRadiusBase: 0.008,
     chargedRadiusBoost: 0.32,
     rapidLifetime: 3.0,
@@ -76,14 +81,14 @@ const GAME_PARAMS = {
     chargedGlowScale: 1.15,
     chargeLightIntensity: 3,
     chargeLightDistance: 5,
-    impactBaseCount: 120,
-    impactChargeCount: 500,
+    impactBaseCount: 360,
+    impactChargeCount: 90,
   },
   projectile: {
-    rapidColor: '#ffaa00',
-    chargedColor: '#ffaa00',
-    rapidEmissive: 5,
-    chargedEmissive: 10,
+    rapidColor: '#00ffe1',
+    chargedColor: '#00ffd5',
+    rapidEmissive: 5.00,
+    chargedEmissive: 10.00,
     rapidOpacity: 0.9,
     chargedOpacity: 1.0,
     rapidLightIntensity: 0.6,
@@ -100,92 +105,92 @@ const GAME_PARAMS = {
     chargedGlowPulseAmount: 0.3,
   },
   jetpack: {
-    flameHeight: 2.2,
-    flameWidth: 1.0,
-    flameTurbulence: 0.25,
-    flameNoiseScale: 1.0,
-    flameCoreSize: 0.25,
-    coreColor: '#ff8c0d',
-    midColor: '#1a73ff',
-    lightningSpeed: 8.0,
-    lightningChaos: 0.4,
-    lightningDensity: 3.0,
+    flameHeight: 0.95,
+    flameWidth: 0.30,
+    flameTurbulence: 1.42,
+    flameNoiseScale: 6.00,
+    flameCoreSize: 1.18,
+    coreColor: '#ffffff',
+    midColor: '#00ffee',
+    lightningSpeed: 20.10,
+    lightningChaos: 1.43,
+    lightningDensity: 2,
     lightningArc: 0.6,
-    lightningThickness: 0.08,
-    lightningIntensity: 1.0,
+    lightningThickness: 0.40,
+    lightningIntensity: 5.00,
     raymarchSteps: 64,
     raymarchPrecision: 0.02,
-    glowPower: 4.0,
-    colorBoost: 6.0,
+    glowPower: 1.00,
+    colorBoost: 7.40,
     fadeInRate: 14.0,
     fadeOutRate: 5.0,
-    positionOffsetY: -0.8,
-    baseScale: 0.6,
+    positionOffsetY: -3.00,
+    baseScale: 0.63,
     lightBaseIntensity: 20,
     lightRandomRange: 115,
     lightDistance: 6,
   },
   particles: {
-    brightness: 15,
-    gravityScale: 0.015,
-    drag: 2.5,
-    rapidTrailRate: 0.078,
-    chargedTrailRate: 0.016,
-    rapidTrailCount: 2,
+    brightness: 15.00,
+    gravityScale: 0.0150,
+    drag: 2.50,
+    rapidTrailRate: 0.0250,
+    chargedTrailRate: 0.0160,
+    rapidTrailCount: 9,
     chargedTrailCountBase: 1,
-    chargedTrailCountBoost: 4,
+    chargedTrailCountBoost: 1,
     jetpackParticleCount: 10,
     chargeParticleBase: 1,
     chargeParticleBoost: 3,
   },
   robot: {
-    scale: 0.15,
+    scale: 0.03,
     turnSmoothMoving: 12,
     turnSmoothIdle: 8,
     turnAnimationThreshold: 0.05,
-    bodyAirLean: 0.02,
-    bodyJetpackLean: 0.3,
+    bodyAirLean: 0.0200,
+    bodyJetpackLean: 0.30,
     verticalDragAmount: 0.05,
-    legDangle: -0.3,
-    legJetpackDangle: -0.5,
+    legDangle: -0.30,
+    legJetpackDangle: -0.50,
     legSwingSpeed: 3,
     legSwingAmount: 0.12,
     legSwaySpeed: 2,
     legSwayAmount: 0.08,
     hoverJitterSpeed: 20,
-    hoverJitterAmount: 0.05,
-    crouchBodyDrop: 0.7,
+    hoverJitterAmount: 0.0500,
+    crouchBodyDrop: 0.70,
   },
   shield: {
-    radius: 0.7,
-    posY: 0.7,
+    radius: 0.20,
+    posY: 0.12,
     color: '#26aeff',
-    opacity: 0.76,
+    opacity: 0.41,
     showHex: true,
-    hexScale: 10,
-    hexOpacity: 0.13,
-    edgeWidth: 0.06,
-    fresnelPower: 1.8,
-    fresnelStrength: 1.75,
+    hexScale: 6.80,
+    hexOpacity: 2.00,
+    edgeWidth: 0.2000,
+    fresnelPower: 8.00,
+    fresnelStrength: 0.90,
     flowScale: 2.4,
-    flowSpeed: 1.13,
-    flowIntensity: 4,
+    flowSpeed: 0.80,
+    flowIntensity: 2.10,
     noiseScale: 1.3,
     noiseEdgeWidth: 0.02,
-    noiseEdgeIntensity: 10,
+    noiseEdgeIntensity: 6.30,
     hitRingSpeed: 1.75,
     hitRingWidth: 0.12,
-    hitIntensity: 4.1,
+    hitIntensity: 1.70,
   },
   audio: {
-    masterVolume: 1.0,
-    walking: 0.4,
-    running: 0.6,
-    jetpack: 0.5,
-    charge: 0.5,
-    fire: 0.7,
-    shield: 0.6,
-    servo: 0.3,
+    masterVolume: 1.00,
+    walking: 0.40,
+    running: 0.60,
+    jetpack: 0.50,
+    charge: 0.50,
+    fire: 0.70,
+    shield: 0.60,
+    servo: 0.30,
   },
 };
 
@@ -215,6 +220,20 @@ scene.fog = new THREE.FogExp2(GAME_PARAMS.scene.fogColor, GAME_PARAMS.scene.fogD
 const camera = new THREE.PerspectiveCamera(GAME_PARAMS.camera.baseFOV, innerWidth / innerHeight, 0.1, 1000);
 camera.layers.enable(1);
 camera.layers.enable(2);
+
+const minimapCamera = new THREE.OrthographicCamera(-1000, 1000, 1000, -1000, 1, 1000);
+minimapCamera.up.set(0, 0, -1); // Oriented so north is 'up' in the top-down view
+minimapCamera.layers.enable(0);
+minimapCamera.layers.enable(1);
+minimapCamera.layers.enable(2);
+
+const overviewCamera = new THREE.OrthographicCamera(-40000, 40000, 40000, -40000, 1, 30000);
+overviewCamera.position.set(0, 20000, 0);
+overviewCamera.up.set(0, 0, -1);
+overviewCamera.lookAt(0, 0, 0);
+overviewCamera.layers.enable(0);
+overviewCamera.layers.enable(1);
+overviewCamera.layers.enable(2);
 
 // ─── Audio System ──────────────────────────────────────────────────────────
 const listener = new THREE.AudioListener();
@@ -255,6 +274,7 @@ renderer.shadowMap.type = THREE.PCFSoftShadowMap;
 renderer.outputColorSpace = THREE.SRGBColorSpace;
 renderer.toneMapping = THREE.ACESFilmicToneMapping;
 renderer.toneMappingExposure = GAME_PARAMS.scene.exposure;
+renderer.autoClear = false;
 document.body.appendChild(renderer.domElement);
 
 // ─── Post Processing ──────────────────────────────────────────────────────
@@ -294,10 +314,36 @@ const BASE_FOV = GAME_PARAMS.camera.baseFOV;
 
 // ─── Player group ──────────────────────────────────────────────────────────
 const playerGroup = new THREE.Group();
-playerGroup.position.set(-50.0, 1.5, 0.0);
+// Compute a safe ground spawn point using a downward raycast from above the map center
+function getGroundSpawn() {
+  // Ensure the environment mesh is loaded
+  if (!environmentMesh) return new THREE.Vector3(0, 10, 0);
+  const box = new THREE.Box3().setFromObject(environmentMesh);
+  const center = box.getCenter(new THREE.Vector3());
+  const rayOrigin = new THREE.Vector3(center.x, center.y + 200, center.z);
+  const down = new THREE.Vector3(0, -1, 0);
+  const ray = new THREE.Raycaster(rayOrigin, down);
+  ray.firstHitOnly = true;
+  const hits = ray.intersectObject(environmentMesh, true);
+  if (hits.length > 0) {
+    const pt = hits[0].point.clone();
+    pt.y += 5; // small offset above ground
+    return pt;
+  }
+  // fallback if no hit
+  return new THREE.Vector3(0, 10, 0);
+}
+
+// Initial player spawn (replaces hard‑coded coordinates)
+playerGroup.position.copy(getGroundSpawn());
 scene.add(playerGroup);
 
-// ─── Robot model & bones ───────────────────────────────────────────────────
+// Default robot scale – start smaller so it fits on the minimap without user tweaking
+if (GAME_PARAMS.robot && GAME_PARAMS.robot.scale === undefined) {
+  GAME_PARAMS.robot.scale = 0.3;
+}
+// Apply robot scale after model loads (already handled elsewhere)
+
 let robotModel = null, mixer = null, runAction = null;
 let muzzlePoint = null;
 let jetpackLight = null;
@@ -358,9 +404,18 @@ document.addEventListener('keyup', e => {
 const chargeBar = document.getElementById('charge-bar');
 const chargeFill = document.getElementById('charge-fill');
 let isLocked = false;
-document.body.requestPointerLock(); // Auto-lock on load
+let isTeleporting = false;
+const instructions = document.getElementById('instructions');
+
+instructions.addEventListener('click', () => {
+  document.body.requestPointerLock();
+  instructions.style.display = 'none';
+  isLocked = true;
+});
+
 document.addEventListener('pointerlockchange', () => {
   isLocked = document.pointerLockElement === document.body;
+  instructions.style.display = isLocked ? 'none' : 'flex';
 });
 
 // M key toggles pointer lock on/off for accessing settings
@@ -372,6 +427,40 @@ document.addEventListener('keydown', e => {
     } else {
       document.body.requestPointerLock();
     }
+  }
+  if (e.code === 'KeyT') {
+    isTeleporting = !isTeleporting;
+    const teleportOverlay = document.getElementById('teleport-overlay');
+    if (isTeleporting) {
+      document.exitPointerLock();
+      teleportOverlay.style.display = 'flex';
+      instructions.style.display = 'none'; // Ensure instructions don't block the map
+    } else {
+      teleportOverlay.style.display = 'none';
+      if (!isLocked) instructions.style.display = 'flex';
+      document.body.requestPointerLock();
+    }
+  }
+});
+
+document.getElementById('exit-teleport').addEventListener('click', () => {
+  isTeleporting = false;
+  document.getElementById('teleport-overlay').style.display = 'none';
+  document.body.requestPointerLock();
+});
+
+window.addEventListener('mousedown', e => {
+  if (!isTeleporting) return;
+  const mouse = new THREE.Vector2((e.clientX / window.innerWidth) * 2 - 1, -(e.clientY / window.innerHeight) * 2 + 1);
+  const raycaster = new THREE.Raycaster();
+  raycaster.setFromCamera(mouse, overviewCamera);
+  const hits = environmentMesh ? raycaster.intersectObject(environmentMesh, true) : [];
+  if (hits.length > 0) {
+    playerGroup.position.copy(hits[0].point).y += 10;
+    playerVelocity.set(0, 0, 0);
+    isTeleporting = false;
+    document.getElementById('teleport-overlay').style.display = 'none';
+    document.body.requestPointerLock();
   }
 });
 
@@ -926,6 +1015,7 @@ const particleMat = new THREE.ShaderMaterial({
   transparent: true,
   depthWrite: false,
   blending: THREE.AdditiveBlending,
+  vertexColors: true,
   uniforms: {
     uTex: { value: buildParticleTexture() },
     uBrightness: { value: GAME_PARAMS.particles.brightness }
@@ -1364,8 +1454,11 @@ function updatePhysics(delta) {
   cameraPivot.rotation.y = smoothYaw;
   cameraRig.rotation.x = smoothPitch;
 
+  if (isTeleporting) return;
+
+  // Reset to a safe ground position if player falls out of bounds
   if (playerGroup.position.y < -50) {
-    playerGroup.position.set(-50.0, 1.5, 0.0);
+    playerGroup.position.copy(getGroundSpawn());
     playerVelocity.set(0, 0, 0);
   }
 
@@ -1378,9 +1471,10 @@ function updatePhysics(delta) {
   const camDir = new THREE.Vector3(0, 0, 1).applyQuaternion(rigQ);
   const camCaster = new THREE.Raycaster(pivotW, camDir, 0.05, GAME_PARAMS.camera.maxDistance);
   camCaster.layers.set(0);
+  camCaster.firstHitOnly = true; // Optimization and accuracy for BVH
   const camHits = environmentMesh ? camCaster.intersectObject(environmentMesh, true) : [];
   const targetZ = camHits.length > 0
-    ? Math.max(GAME_PARAMS.camera.minDistance, camHits[0].distance - GAME_PARAMS.camera.wallPadding)
+    ? Math.max(0.05, camHits[0].distance - GAME_PARAMS.camera.wallPadding)
     : GAME_PARAMS.camera.maxDistance;
   cameraRig.position.z += (targetZ - cameraRig.position.z) * (1 - Math.exp(-GAME_PARAMS.camera.collisionSmooth * delta));
 }
@@ -1452,12 +1546,20 @@ function applyGameParams() {
   spriteMatRapid.opacity = GAME_PARAMS.projectile.rapidOpacity;
   spriteMatCharge.color.set(GAME_PARAMS.projectile.chargedColor);
   spriteMatCharge.opacity = GAME_PARAMS.projectile.chargedOpacity;
-  particleMat.uniforms.uBrightness.value = GAME_PARAMS.particles.brightness;
+  if (particleMat.uniforms) {
+    particleMat.uniforms.uBrightness.value = GAME_PARAMS.particles.brightness;
+  }
   updateJetpackUniforms();
   if (robotModel) robotModel.scale.setScalar(GAME_PARAMS.robot.scale);
   if (jetpackLight) jetpackLight.distance = GAME_PARAMS.jetpack.lightDistance;
   updateShieldConfig(GAME_PARAMS.shield);
   updateAudioVolumes();
+
+  const mContainer = document.getElementById('minimap-container');
+  if (mContainer) {
+    mContainer.style.width = `${GAME_PARAMS.minimap.size}px`;
+    mContainer.style.height = `${GAME_PARAMS.minimap.size}px`;
+  }
 }
 
 function createControlPanel() {
@@ -1503,7 +1605,7 @@ function createControlPanel() {
       ['particles.chargedTrailCountBoost', 'range', 'Charged trail boost', 0, 16, 1],
     ],
     Robot: [
-      ['robot.scale', 'range', 'Robot scale', 0.03, 0.5, 0.005], ['robot.turnSmoothMoving', 'range', 'Move turn smooth', 1, 40, 1], ['robot.turnSmoothIdle', 'range', 'Idle turn smooth', 1, 40, 1],
+      ['robot.scale', 'range', 'Robot scale', 0.5, 10.0, 0.1], ['robot.turnSmoothMoving', 'range', 'Move turn smooth', 1, 40, 1], ['robot.turnSmoothIdle', 'range', 'Idle turn smooth', 1, 40, 1],
       ['robot.bodyJetpackLean', 'range', 'Jetpack body lean', -1, 1, 0.01], ['robot.bodyAirLean', 'range', 'Air body lean', -0.2, 0.2, 0.005], ['robot.legDangle', 'range', 'Air leg angle', -1.5, 1, 0.01],
       ['robot.legJetpackDangle', 'range', 'Jetpack leg angle', -1.5, 1, 0.01], ['robot.legSwingAmount', 'range', 'Leg swing', 0, 0.6, 0.01], ['robot.legSwayAmount', 'range', 'Leg sway', 0, 0.6, 0.01],
       ['robot.hoverJitterAmount', 'range', 'Hover jitter', 0, 0.3, 0.005], ['robot.crouchBodyDrop', 'range', 'Crouch drop', 0, 1.5, 0.01],
@@ -1517,6 +1619,10 @@ function createControlPanel() {
     Audio: [
       ['audio.masterVolume', 'range', 'Master', 0, 1.5, 0.01], ['audio.walking', 'range', 'Walking', 0, 1, 0.01], ['audio.running', 'range', 'Running', 0, 1, 0.01], ['audio.jetpack', 'range', 'Jetpack', 0, 1, 0.01],
       ['audio.charge', 'range', 'Charge', 0, 1, 0.01], ['audio.fire', 'range', 'Fire', 0, 1, 0.01], ['audio.shield', 'range', 'Shield', 0, 1, 0.01], ['audio.servo', 'range', 'Servo', 0, 1, 0.01],
+    ],
+    Minimap: [
+      ['minimap.zoom', 'range', 'Zoom', 5, 200, 1],
+      ['minimap.size', 'range', 'Map size', 100, 400, 10],
     ],
   };
   const getValue = path => path.split('.').reduce((obj, key) => obj[key], GAME_PARAMS);
@@ -1564,10 +1670,14 @@ function createControlPanel() {
 createControlPanel();
 applyGameParams();
 
+const dracoLoader = new DRACOLoader();
+dracoLoader.setDecoderPath('https://www.gstatic.com/draco/versioned/decoders/1.5.7/');
 const loader = new GLTFLoader();
+loader.setDRACOLoader(dracoLoader);
 
-loader.load('https://pub-a56d70d158b1414d83c3856ea210601c.r2.dev/EgyptMap_GLB.glb', gltf => {
+loader.load('https://pub-a56d70d158b1414d83c3856ea210601c.r2.dev/NewCityCompressed.glb', gltf => {
   const model = gltf.scene;
+  model.scale.setScalar(0.001); // Shrink the massive city to manageable bounds
   model.updateMatrixWorld(true);
   model.traverse(child => {
     if (!child.isMesh) return;
@@ -1583,9 +1693,27 @@ loader.load('https://pub-a56d70d158b1414d83c3856ea210601c.r2.dev/EgyptMap_GLB.gl
     }
     child.geometry.computeBoundsTree();
   });
+
+  const box = new THREE.Box3().setFromObject(model);
+  const center = box.getCenter(new THREE.Vector3());
+  const size = box.getSize(new THREE.Vector3());
+  const maxDim = Math.max(size.x, size.z);
+
+  overviewCamera.left = -maxDim / 2 - 500;
+  overviewCamera.right = maxDim / 2 + 500;
+  overviewCamera.top = maxDim / 2 + 500;
+  overviewCamera.bottom = -maxDim / 2 - 500;
+  overviewCamera.position.set(center.x, center.y + 50, center.z);
+  overviewCamera.lookAt(center);
+  overviewCamera.updateProjectionMatrix();
+
   environmentMesh = model;
   scene.add(model);
   window.environmentMesh = environmentMesh;
+
+  // Respawn player properly now that the environment is loaded
+  playerGroup.position.copy(getGroundSpawn());
+  playerVelocity.set(0, 0, 0);
 });
 
 loader.load('https://pub-a56d70d158b1414d83c3856ea210601c.r2.dev/orb-ROBOT.glb', gltf => {
@@ -1739,7 +1867,42 @@ function animate() {
       }
     }
   }
-  composer.render();
+
+  renderer.clear();
+  renderer.setViewport(0, 0, innerWidth, innerHeight);
+
+  if (isTeleporting) {
+    const savedFog = scene.fog;
+    scene.fog = null;
+    renderer.render(scene, overviewCamera);
+    scene.fog = savedFog;
+  } else {
+    composer.render();
+  }
+
+  // ─── Minimap ──────────────────────────────────────────────────────────────
+  const mapSize = GAME_PARAMS.minimap.size;
+  const padding = 20;
+  renderer.setViewport(padding, innerHeight - mapSize - padding, mapSize, mapSize);
+  renderer.setScissor(padding, innerHeight - mapSize - padding, mapSize, mapSize);
+  renderer.setScissorTest(true);
+
+  const orthoRange = GAME_PARAMS.minimap.zoom;
+  minimapCamera.left = -orthoRange;
+  minimapCamera.right = orthoRange;
+  minimapCamera.top = orthoRange;
+  minimapCamera.bottom = -orthoRange;
+  minimapCamera.updateProjectionMatrix();
+
+  minimapCamera.position.set(playerGroup.position.x, 1000, playerGroup.position.z);
+  minimapCamera.lookAt(playerGroup.position.x, 0, playerGroup.position.z);
+
+  // Update minimap camera to follow the player each frame
+  minimapCamera.position.set(playerGroup.position.x, 2000, playerGroup.position.z);
+  minimapCamera.lookAt(playerGroup.position.x, 0, playerGroup.position.z);
+  minimapCamera.updateProjectionMatrix();
+
+  renderer.setScissorTest(false);
 }
 
 animate();

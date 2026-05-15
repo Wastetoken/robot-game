@@ -1,0 +1,350 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <title>Jetpack Flame Effect</title>
+    <style>
+        body {
+            margin: 0;
+            padding: 0;
+            background: #000;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            height: 100vh;
+            font-family: monospace;
+        }
+        canvas {
+            border: 1px solid #333;
+        }
+        .info {
+            position: absolute;
+            top: 10px;
+            left: 10px;
+            color: #0f0;
+            font-size: 12px;
+        }
+    </style>
+</head>
+<body>
+    <div class="info">WebGPU Jetpack Flame Effect</div>
+    <script id="vs.wgsl" type="wgsl">
+struct VSOut {
+    @builtin(position) Position: vec4<f32>,
+    @location(0)       uvs     : vec2<f32>,
+};
+
+@vertex 
+fn main(@builtin(vertex_index) VertexIndex : u32)  -> VSOut 
+{
+    var s = 0.9; 
+    var pos =  array<vec2<f32>, 4>( vec2<f32>( -s,  s ), 
+                                    vec2<f32>( -s, -s ), 
+                                    vec2<f32>(  s,  s ),
+                                    vec2<f32>(  s, -s ));
+
+    s = 1.0;
+    var uvs =  array<vec2<f32>, 4>( vec2<f32>( -s,  s ), 
+                                    vec2<f32>( -s, -s ), 
+                                    vec2<f32>(  s,  s ),
+                                    vec2<f32>(  s, -s ));
+
+    
+    var vsOut: VSOut;
+    vsOut.Position = vec4<f32>(pos[ VertexIndex ], 0.0, 1.0);
+    vsOut.uvs      = uvs[ VertexIndex ] * 0.5 + 0.5; // 0->1
+    return vsOut;
+}
+    </script>
+    
+    <script id="fs.wgsl" type="wgsl">
+// [[block]] 
+struct Uniforms {
+  mytimer                  : f32,
+};
+
+@group(0) @binding(0) var  mySampler: sampler;
+@group(0) @binding(1) var  myTexture: texture_2d<f32>;
+@group(0) @binding(2) var <uniform> uniforms : Uniforms;
+
+fn hash(p : vec3<f32>) -> vec3<f32>
+{
+    p = vec3<f32>(dot(p, vec3<f32>(127.1, 311.7, 74.7)),
+                 dot(p, vec3<f32>(269.5, 183.3, 246.1)),
+                 dot(p, vec3<f32>(113.5, 271.9, 124.6)));
+    return -1.0 + 2.0 * fract(sin(p) * 43758.5453123);
+}
+
+fn noise(p : vec3<f32>) -> f32
+{
+    var i = floor(p);
+    var f = fract(p);
+    var u = f * f * (3.0 - 2.0 * f);
+    
+    var a = hash(i + vec3<f32>(0.0, 0.0, 0.0));
+    var b = hash(i + vec3<f32>(1.0, 0.0, 0.0));
+    var c = hash(i + vec3<f32>(0.0, 1.0, 0.0));
+    var d = hash(i + vec3<f32>(1.0, 1.0, 0.0));
+    var e = hash(i + vec3<f32>(0.0, 0.0, 1.0));
+    var f1 = hash(i + vec3<f32>(1.0, 0.0, 1.0));
+    var g = hash(i + vec3<f32>(0.0, 1.0, 1.0));
+    var h = hash(i + vec3<f32>(1.0, 1.0, 1.0));
+    
+    var k0 = mix(a, b, u.x);
+    var k1 = mix(c, d, u.x);
+    var l0 = mix(k0, k1, u.y);
+    
+    var k2 = mix(e, f1, u.x);
+    var k3 = mix(g, h, u.x);
+    var l1 = mix(k2, k3, u.y);
+    
+    return mix(l0, l1, u.z);
+}
+
+fn fbm(p : vec3<f32>) -> f32
+{
+    var value = 0.0;
+    var amplitude = 0.5;
+    var frequency = 0.0;
+    
+    for(var i = 0; i < 4; i = i + 1)
+    {
+        value += amplitude * noise(p);
+        p = p * 2.0;
+        amplitude *= 0.5;
+    }
+    
+    return value;
+}
+
+fn sphere(p: vec3<f32>, spr: vec4<f32>) -> f32
+{
+  return length(spr.xyz-p) - spr.w;
+}
+
+fn flame(p: vec3<f32>) -> f32
+{
+  var iTime = uniforms.mytimer;
+  
+  // Base flame shape - elongated sphere
+  var d = sphere(p*vec3<f32>(1.2, 0.4, 1.2), vec4<f32>(0.0, -0.8, 0.0, 1.0));
+  
+  // Add turbulence and movement
+  var turbulence = fbm(p * 2.0 + vec3<f32>(iTime * 1.5, iTime * 3.0, iTime * 0.8));
+  var wind = fbm(p * 0.5 + vec3<f32>(iTime * 0.3, 0.0, iTime * 0.5));
+  
+  // Combine effects for more realistic flame
+  var noise_effect = (turbulence + wind * 0.3) * 0.15;
+  var height_factor = max(0.0, p.y + 1.0) * 0.8; // Stronger effect at top
+  
+  return d + noise_effect * height_factor;
+}
+
+fn scene(p: vec3<f32>) -> f32
+{
+  return min(100.0-length(p) , abs(flame(p)) );
+}
+
+fn raymarch(org: vec3<f32>, dir: vec3<f32>) -> vec4<f32>
+{
+  var d    = 0.0;
+  var glow = 0.0;
+  var eps  = 0.005; // Higher precision
+  var p    = org;
+  var glowed = 0u;
+  var max_dist = 10.0;
+  var traveled = 0.0;
+  
+  for(var i=0; i<128; i=i+1) // More steps for better quality
+  {
+    d = scene(p) + eps;
+    p = p + d * dir;
+    traveled += d;
+    
+    if(traveled > max_dist)
+    {
+      break;
+    }
+    
+    if(d > eps)
+    {
+      if(flame(p) < 0.0)
+      {
+        glowed = 1u;
+      }
+
+      if(glowed == 1u)
+      {
+        glow = f32(i)/128.0;
+      }
+    }
+  }
+  return vec4<f32>(p, glow);
+}
+
+@fragment
+fn main(@location(0) uvs    : vec2<f32>) -> @location(0) vec4<f32> 
+{
+  var v = -1.0 + 2.0 * uvs.xy / 1.0;
+  
+  var org = vec3<f32>(0., -2., 4.);
+  var dir = normalize(vec3<f32>(v.x*1.6, -v.y, -1.5));
+  
+  var p = raymarch(org, dir);
+  var glow = p.w;
+  
+  // Enhanced color gradient for jetpack flame
+  // Inner core: bright white-blue
+  // Middle: orange-yellow  
+  // Outer: deep blue-purple
+  var height_factor = (p.y + 1.5) * 0.4;
+  
+  var inner_color = vec4<f32>(1.0, 0.9, 0.7, 1.0);  // Bright white-yellow
+  var mid_color = vec4<f32>(1.0, 0.4, 0.1, 1.0);    // Orange
+  var outer_color = vec4<f32>(0.2, 0.3, 0.8, 1.0);   // Blue-purple
+  
+  var col = mix(inner_color, mid_color, height_factor);
+  col = mix(col, outer_color, height_factor * height_factor);
+  
+  // Add some flicker variation
+  var flicker = fbm(p + uniforms.mytimer * vec3<f32>(2.0, 1.0, 0.5)) * 0.2 + 0.8;
+  col = col * flicker;
+  
+  // Better glow falloff
+  var fragColor = mix(vec4<f32>(0.), col, pow(glow * 2.2, 3.5));
+    
+  fragColor.w = 1.0;
+  return fragColor;
+}
+    </script>
+
+    <script>
+        const canvas = document.createElement('canvas');
+        document.body.appendChild(canvas);
+        canvas.width = canvas.height = 512;
+        console.log('Canvas size:', canvas.width, canvas.height);
+        
+        const context = canvas.getContext('webgpu');
+        if (!context) {
+            document.body.innerHTML = '<div style="color: red; text-align: center; margin-top: 200px;">WebGPU not supported in this browser</div>';
+            throw new Error('WebGPU not supported');
+        }
+
+        const gpu = navigator.gpu;
+        console.log('GPU available:', !!gpu);
+
+        const adapter = await gpu.requestAdapter();
+        const device = await adapter.requestDevice();
+
+        const devicePixelRatio = window.devicePixelRatio || 1;
+        const presentationSize = [
+            canvas.clientWidth * devicePixelRatio,
+            canvas.clientHeight * devicePixelRatio
+        ];
+        const presentationFormat = navigator.gpu.getPreferredCanvasFormat();
+        console.log('Presentation format:', presentationFormat);
+
+        context.configure({
+            device: device,
+            format: presentationFormat,
+            size: presentationSize
+        });
+
+        const vertWGSL = document.getElementById('vs.wgsl').innerHTML;
+        const fragWGSL = document.getElementById('fs.wgsl').innerHTML;
+
+        // Create a simple texture (we don't really use it but it's required by the bind group)
+        const textureSampler = device.createSampler({
+            minFilter: "linear",
+            magFilter: "linear"
+        });
+
+        const basicTexture = device.createTexture({
+            size: [1, 1, 1],
+            format: presentationFormat,
+            usage: GPUTextureUsage.TEXTURE_BINDING | GPUTextureUsage.COPY_DST
+        });
+
+        // Fill with a single white pixel
+        device.queue.writeTexture(
+            { texture: basicTexture },
+            new Uint8Array([255, 255, 255, 255]),
+            { offset: 0, bytesPerRow: 4, rowsPerImage: 1 },
+            [1, 1, 1]
+        );
+
+        const timerUniformBuffer = device.createBuffer({
+            size: 4,
+            usage: GPUBufferUsage.UNIFORM | GPUBufferUsage.COPY_DST
+        });
+
+        const timestep = new Float32Array([0.0]);
+
+        device.queue.writeBuffer(timerUniformBuffer, 0, timestep);
+
+        const sceneUniformBindGroupLayout = device.createBindGroupLayout({
+            entries: [
+                { binding: 0, visibility: GPUShaderStage.FRAGMENT, sampler: { type: "filtering" } },
+                { binding: 1, visibility: GPUShaderStage.FRAGMENT, texture: { sampleType: "float", viewDimension: "2d" } },
+                { binding: 2, visibility: GPUShaderStage.FRAGMENT, buffer: { type: "uniform" } }
+            ]
+        });
+
+        const uniformBindGroup = device.createBindGroup({
+            layout: sceneUniformBindGroupLayout,
+            entries: [
+                { binding: 0, resource: textureSampler },
+                { binding: 1, resource: basicTexture.createView() },
+                { binding: 2, resource: { buffer: timerUniformBuffer } }
+            ]
+        });
+
+        const pipeline = device.createRenderPipeline({
+            layout: device.createPipelineLayout({ bindGroupLayouts: [sceneUniformBindGroupLayout] }),
+            vertex: {
+                module: device.createShaderModule({ code: vertWGSL }),
+                entryPoint: 'main'
+            },
+            fragment: {
+                module: device.createShaderModule({ code: fragWGSL }),
+                entryPoint: 'main',
+                targets: [{ format: presentationFormat }]
+            },
+            primitive: {
+                topology: 'triangle-strip',
+                frontFace: "ccw",
+                stripIndexFormat: 'uint32'
+            }
+        });
+
+        const renderPassDescriptor = {
+            colorAttachments: [{
+                view: undefined, // assigned later in frame
+                loadOp: "clear",
+                clearValue: { r: 0.0, g: 0.0, b: 0.0, a: 1.0 },
+                storeOp: 'store'
+            }]
+        };
+
+        function frame() {
+            timestep[0] += 0.016; // ~60fps timing
+            device.queue.writeBuffer(timerUniformBuffer, 0, timestep);
+            
+            renderPassDescriptor.colorAttachments[0].view = context.getCurrentTexture().createView();
+
+            const commandEncoder = device.createCommandEncoder();
+            const renderPass = commandEncoder.beginRenderPass(renderPassDescriptor);
+            
+            renderPass.setPipeline(pipeline);
+            renderPass.setBindGroup(0, uniformBindGroup);
+            renderPass.draw(4, 1, 0, 0);
+            renderPass.end();
+            
+            device.queue.submit([commandEncoder.finish()]);
+            requestAnimationFrame(frame);
+        }
+
+        frame();
+        console.log('Jetpack flame effect initialized!');
+    </script>
+</body>
+</html>

@@ -10,7 +10,26 @@
 </head>
 
 <body>
+  <div id="instructions">
+    <h1>ORB ROBOT</h1>
+    <p>CLICK TO START</p>
+    <div class="codex-build-tag">CODEX v2.0</div>
+    <div class="controls-hint">
+      <span class="key-hint">W,A,S,D</span> MOVE | 
+      <span class="key-hint">SPACE</span> JETPACK | 
+      <span class="key-hint">MOUSE</span> AIM & FIRE | 
+      <span class="key-hint">M</span> SETTINGS |
+      <span class="key-hint">T</span> TELEPORT
+    </div>
+  </div>
+  <div id="teleport-overlay" style="display:none;">
+    <div id="teleport-label">CLICK ANYWHERE ON THE MAP TO SPAWN</div>
+    <button id="exit-teleport">CANCEL</button>
+  </div>
   <div id="crosshair"></div>
+  <div id="minimap-container">
+    <div id="minimap-label">Minimap</div>
+  </div>
   <div id="charge-bar">
     <div id="charge-fill"></div>
   </div>
