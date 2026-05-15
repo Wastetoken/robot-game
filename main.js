@@ -13,227 +13,14 @@ THREE.BufferGeometry.prototype.computeBoundsTree = computeBoundsTree;
 THREE.BufferGeometry.prototype.disposeBoundsTree = disposeBoundsTree;
 THREE.Mesh.prototype.raycast = acceleratedRaycast;
 
-const CONTROL_STORAGE_KEY = 'orbRobotControls.v3';
-const GAME_PARAMS = {
-  scene: {
-    background: '#b5f8ff',
-    fogColor: '#e6d1b3',
-    fogDensity: 0.0630,
-    exposure: 0.80,
-    pixelRatio: Math.min(devicePixelRatio, 2),
-    bloomThreshold: 0.9,
-    bloomStrength: 0.20,
-    bloomRadius: 0.05,
-  },
-  minimap: {
-    zoom: 5,
-    size: 100,
-  },
-  lighting: {
-    ambientColor: '#ddeeff',
-    ambientIntensity: 1.78,
-    sunColor: '#fff4e0',
-    sunIntensity: 1.20,
-    sunX: 100,
-    sunY: 150,
-    sunZ: 100,
-  },
-  physics: {
-    gravity: -20,
-    speed: 18.0,
-    sprintMultiplier: 2.00,
-    groundAcceleration: 13,
-    airAcceleration: 10,
-    jumpVelocity: 2.10,
-    jetpackForce: 28,
-    maxJetVelocity: 5.30,
-    frictionGround: 30,
-    frictionAir: 5.20,
-    physicsSubSteps: 8,
-    capsuleHeight: 1.0,
-    capsuleRadius: 0.3,
-  },
-  camera: {
-    baseFOV: 45,
-    chargeFOV: 68,
-    mouseSensitivity: 0.0020,
-    pitchLimitPadding: 0.05,
-    pivotHeight: 0.83,
-    maxDistance: 1.90,
-    minDistance: 0.5,
-    wallPadding: 0.2,
-    rotationSmooth: 24,
-    collisionSmooth: 15,
-  },
-  combat: {
-    chargeThreshold: 0.15,
-    maxChargeTime: 1.0,
-    rapidCooldown: 0.09,
-    rapidSpeed: 10,
-    chargedSpeedBase: 5,
-    chargedSpeedBoost: 5,
-    rapidRadius: 0.0060,
-    chargedRadiusBase: 0.008,
-    chargedRadiusBoost: 0.32,
-    rapidLifetime: 3.0,
-    chargedLifetime: 5.0,
-    rapidGlowScale: 0.15,
-    chargedGlowScale: 1.15,
-    chargeLightIntensity: 3,
-    chargeLightDistance: 5,
-    impactBaseCount: 360,
-    impactChargeCount: 90,
-  },
-  projectile: {
-    rapidColor: '#00ffe1',
-    chargedColor: '#00ffd5',
-    rapidEmissive: 5.00,
-    chargedEmissive: 10.00,
-    rapidOpacity: 0.9,
-    chargedOpacity: 1.0,
-    rapidLightIntensity: 0.6,
-    chargedLightBase: 1,
-    chargedLightBoost: 2,
-    rapidLightDistance: 4,
-    chargedLightDistanceBase: 4,
-    chargedLightDistanceBoost: 8,
-    pulseSpeed: 18,
-    pulseAmount: 0.15,
-    chargedMeshPulseSpeed: 20,
-    chargedMeshPulseAmount: 0.1,
-    chargedGlowPulseSpeed: 25,
-    chargedGlowPulseAmount: 0.3,
-  },
-  jetpack: {
-    flameHeight: 0.95,
-    flameWidth: 0.30,
-    flameTurbulence: 1.42,
-    flameNoiseScale: 6.00,
-    flameCoreSize: 1.18,
-    coreColor: '#ffffff',
-    midColor: '#00ffee',
-    lightningSpeed: 20.10,
-    lightningChaos: 1.43,
-    lightningDensity: 2,
-    lightningArc: 0.6,
-    lightningThickness: 0.40,
-    lightningIntensity: 5.00,
-    raymarchSteps: 64,
-    raymarchPrecision: 0.02,
-    glowPower: 1.00,
-    colorBoost: 7.40,
-    fadeInRate: 14.0,
-    fadeOutRate: 5.0,
-    positionOffsetY: -3.00,
-    baseScale: 0.63,
-    lightBaseIntensity: 20,
-    lightRandomRange: 115,
-    lightDistance: 6,
-  },
-  particles: {
-    brightness: 15.00,
-    gravityScale: 0.0150,
-    drag: 2.50,
-    rapidTrailRate: 0.0250,
-    chargedTrailRate: 0.0160,
-    rapidTrailCount: 9,
-    chargedTrailCountBase: 1,
-    chargedTrailCountBoost: 1,
-    jetpackParticleCount: 10,
-    chargeParticleBase: 1,
-    chargeParticleBoost: 3,
-  },
-  robot: {
-    scale: 0.03,
-    turnSmoothMoving: 12,
-    turnSmoothIdle: 8,
-    turnAnimationThreshold: 0.05,
-    bodyAirLean: 0.0200,
-    bodyJetpackLean: 0.30,
-    verticalDragAmount: 0.05,
-    legDangle: -0.30,
-    legJetpackDangle: -0.50,
-    legSwingSpeed: 3,
-    legSwingAmount: 0.12,
-    legSwaySpeed: 2,
-    legSwayAmount: 0.08,
-    hoverJitterSpeed: 20,
-    hoverJitterAmount: 0.0500,
-    crouchBodyDrop: 0.70,
-  },
-  shield: {
-    radius: 0.20,
-    posY: 0.12,
-    color: '#26aeff',
-    opacity: 0.41,
-    showHex: true,
-    hexScale: 6.80,
-    hexOpacity: 2.00,
-    edgeWidth: 0.2000,
-    fresnelPower: 8.00,
-    fresnelStrength: 0.90,
-    flowScale: 2.4,
-    flowSpeed: 0.80,
-    flowIntensity: 2.10,
-    noiseScale: 1.3,
-    noiseEdgeWidth: 0.02,
-    noiseEdgeIntensity: 6.30,
-    hitRingSpeed: 1.75,
-    hitRingWidth: 0.12,
-    hitIntensity: 1.70,
-  },
-  audio: {
-    masterVolume: 1.00,
-    walking: 0.40,
-    running: 0.60,
-    jetpack: 0.50,
-    charge: 0.50,
-    fire: 0.70,
-    shield: 0.60,
-    servo: 0.30,
-  },
-};
-
-function mergeParams(target, source) {
-  if (!source || typeof source !== 'object') return;
-  Object.entries(source).forEach(([key, value]) => {
-    if (!(key in target)) return;
-    if (value && typeof value === 'object' && !Array.isArray(value) && typeof target[key] === 'object') {
-      mergeParams(target[key], value);
-    } else {
-      target[key] = value;
-    }
-  });
-}
-
-try {
-  mergeParams(GAME_PARAMS, JSON.parse(localStorage.getItem(CONTROL_STORAGE_KEY) || '{}'));
-} catch (err) {
-  console.warn('Could not load saved controls', err);
-}
-
 // ─── Renderer ─────────────────────────────────────────────────────────────
 const scene = new THREE.Scene();
 scene.background = new THREE.Color(GAME_PARAMS.scene.background);
 scene.fog = new THREE.FogExp2(GAME_PARAMS.scene.fogColor, GAME_PARAMS.scene.fogDensity);
 
-const camera = new THREE.PerspectiveCamera(GAME_PARAMS.camera.baseFOV, innerWidth / innerHeight, 0.1, 1000);
-camera.layers.enable(1);
-camera.layers.enable(2);
-
-const minimapCamera = new THREE.OrthographicCamera(-1000, 1000, 1000, -1000, 1, 1000);
-minimapCamera.up.set(0, 0, -1); // Oriented so north is 'up' in the top-down view
-minimapCamera.layers.enable(0);
-minimapCamera.layers.enable(1);
-minimapCamera.layers.enable(2);
-
-const overviewCamera = new THREE.OrthographicCamera(-40000, 40000, 40000, -40000, 1, 30000);
-overviewCamera.position.set(0, 20000, 0);
-overviewCamera.up.set(0, 0, -1);
-overviewCamera.lookAt(0, 0, 0);
-overviewCamera.layers.enable(0);
-overviewCamera.layers.enable(1);
-overviewCamera.layers.enable(2);
+const camera = new THREE.PerspectiveCamera(75, innerWidth / innerHeight, 0.1, 1000);
+camera.layers.enable(1); // Projectiles / VFX
+camera.layers.enable(2); // Player / Robot
 
 // ─── Audio System ──────────────────────────────────────────────────────────
 const listener = new THREE.AudioListener();
@@ -273,8 +60,7 @@ renderer.shadowMap.enabled = true;
 renderer.shadowMap.type = THREE.PCFSoftShadowMap;
 renderer.outputColorSpace = THREE.SRGBColorSpace;
 renderer.toneMapping = THREE.ACESFilmicToneMapping;
-renderer.toneMappingExposure = GAME_PARAMS.scene.exposure;
-renderer.autoClear = false;
+renderer.toneMappingExposure = 0.80;
 document.body.appendChild(renderer.domElement);
 
 // ─── Post Processing ──────────────────────────────────────────────────────
@@ -314,28 +100,7 @@ const BASE_FOV = GAME_PARAMS.camera.baseFOV;
 
 // ─── Player group ──────────────────────────────────────────────────────────
 const playerGroup = new THREE.Group();
-// Compute a safe ground spawn point using a downward raycast from above the map center
-function getGroundSpawn() {
-  // Ensure the environment mesh is loaded
-  if (!environmentMesh) return new THREE.Vector3(0, 10, 0);
-  const box = new THREE.Box3().setFromObject(environmentMesh);
-  const center = box.getCenter(new THREE.Vector3());
-  const rayOrigin = new THREE.Vector3(center.x, center.y + 200, center.z);
-  const down = new THREE.Vector3(0, -1, 0);
-  const ray = new THREE.Raycaster(rayOrigin, down);
-  ray.firstHitOnly = true;
-  const hits = ray.intersectObject(environmentMesh, true);
-  if (hits.length > 0) {
-    const pt = hits[0].point.clone();
-    pt.y += 5; // small offset above ground
-    return pt;
-  }
-  // fallback if no hit
-  return new THREE.Vector3(0, 10, 0);
-}
-
-// Initial player spawn (replaces hard‑coded coordinates)
-playerGroup.position.copy(getGroundSpawn());
+playerGroup.position.set(-50.0, 1.5, 0.0); // Open sand area in Egypt Map
 scene.add(playerGroup);
 
 // Default robot scale – start smaller so it fits on the minimap without user tweaking
@@ -403,20 +168,22 @@ document.addEventListener('keyup', e => {
 // ─── Pointer lock ─────────────────────────────────────────────────────────
 const chargeBar = document.getElementById('charge-bar');
 const chargeFill = document.getElementById('charge-fill');
-window.isMobile = false;
 let isLocked = false;
-let isTeleporting = false;
-const instructions = document.getElementById('instructions');
-
-instructions.addEventListener('click', () => {
-  document.body.requestPointerLock();
-  instructions.style.display = 'none';
-  isLocked = true;
-});
-
+instructions.addEventListener('click', () => document.body.requestPointerLock());
 document.addEventListener('pointerlockchange', () => {
   isLocked = document.pointerLockElement === document.body;
-  instructions.style.display = isLocked ? 'none' : 'flex';
+});
+
+// M key toggles pointer lock on/off for accessing settings
+document.addEventListener('keydown', e => {
+  if (e.code === 'KeyM') {
+    e.preventDefault();
+    if (isLocked) {
+      document.exitPointerLock();
+    } else {
+      document.body.requestPointerLock();
+    }
+  }
 });
 
 // M key toggles pointer lock on/off for accessing settings
@@ -652,7 +419,7 @@ let isCharging = false;
 let chargeT = 0;
 
 window.addEventListener('mousedown', e => {
-  if (e.button !== 0 || (!isLocked && !window.isMobile)) return;
+  if (e.button !== 0 || !isLocked) return;
   mouseDownTime = clock.getElapsedTime();
   isCharging = false;
   chargeT = 0;
@@ -660,7 +427,7 @@ window.addEventListener('mousedown', e => {
 });
 
 window.addEventListener('mouseup', e => {
-  if (e.button !== 0 || (!isLocked && !window.isMobile) || mouseDownTime === null) return;
+  if (e.button !== 0 || !isLocked || mouseDownTime === null) return;
   const held = clock.getElapsedTime() - mouseDownTime;
   if (held >= GAME_PARAMS.combat.chargeThreshold) {
     const t = Math.min(held / GAME_PARAMS.combat.maxChargeTime, 1.0);
@@ -1470,14 +1237,11 @@ function updatePhysics(delta) {
   const rigQ = new THREE.Quaternion();
   cameraRig.getWorldQuaternion(rigQ);
   const camDir = new THREE.Vector3(0, 0, 1).applyQuaternion(rigQ);
-  const camCaster = new THREE.Raycaster(pivotW, camDir, 0.05, GAME_PARAMS.camera.maxDistance);
-  camCaster.layers.set(0);
-  camCaster.firstHitOnly = true; // Optimization and accuracy for BVH
-  const camHits = environmentMesh ? camCaster.intersectObject(environmentMesh, true) : [];
-  const targetZ = camHits.length > 0
-    ? Math.max(0.05, camHits[0].distance - GAME_PARAMS.camera.wallPadding)
-    : GAME_PARAMS.camera.maxDistance;
-  cameraRig.position.z += (targetZ - cameraRig.position.z) * (1 - Math.exp(-GAME_PARAMS.camera.collisionSmooth * delta));
+  const camCaster = new THREE.Raycaster(pivotW, camDir, 0.05, 3.0);
+  camCaster.layers.set(0); // Environment only
+  const camHits = camCaster.intersectObject(environmentMesh, true);
+  const targetZ = camHits.length > 0 ? Math.max(0.5, camHits[0].distance - 0.2) : 3.0;
+  cameraRig.position.z += (targetZ - cameraRig.position.z) * (1 - Math.exp(-15 * delta));
 }
 
 // ══════════════════════════════════════════════════════════════════════════════
@@ -1676,7 +1440,7 @@ dracoLoader.setDecoderPath('https://www.gstatic.com/draco/versioned/decoders/1.5
 const loader = new GLTFLoader();
 loader.setDRACOLoader(dracoLoader);
 
-loader.load('https://pub-a56d70d158b1414d83c3856ea210601c.r2.dev/NewCityCompressed.glb', gltf => {
+loader.load('https://pub-a56d70d158b1414d83c3856ea210601c.r2.dev/map.glb', gltf => {
   const model = gltf.scene;
   model.scale.setScalar(0.001); // Shrink the massive city to manageable bounds
   model.updateMatrixWorld(true);
@@ -1907,188 +1671,3 @@ function animate() {
 }
 
 animate();
-
-// ─── Mobile Touch Controls ────────────────────────────────────────────────
-const touchMoveZone = document.getElementById('touch-zone-move');
-const touchLookZone = document.getElementById('touch-zone-look');
-const joyBase = document.getElementById('joystick-base');
-const joyKnob = document.getElementById('joystick-knob');
-const instructionsEl = document.getElementById('instructions');
-
-let moveTouchId = null;
-let lookTouchId = null;
-let moveStartX = 0, moveStartY = 0;
-let lastLookX = 0, lastLookY = 0;
-
-if (touchMoveZone) {
-  touchMoveZone.addEventListener('touchstart', e => {
-    e.preventDefault();
-    window.isMobile = true;
-    if (instructionsEl) instructionsEl.style.display = 'none';
-    if (moveTouchId !== null) return;
-    const t = e.changedTouches[0];
-    moveTouchId = t.identifier;
-    moveStartX = t.clientX;
-    moveStartY = t.clientY;
-    joyBase.style.display = 'block';
-    joyBase.style.left = moveStartX + 'px';
-    joyBase.style.top = moveStartY + 'px';
-    joyKnob.style.transform = 'translate(-50%, -50%)';
-    keys.w = keys.s = keys.a = keys.d = false;
-  }, { passive: false });
-
-  touchMoveZone.addEventListener('touchmove', e => {
-    e.preventDefault();
-    if (moveTouchId === null) return;
-    for (let i=0; i<e.changedTouches.length; i++) {
-      const t = e.changedTouches[i];
-      if (t.identifier === moveTouchId) {
-        const dx = t.clientX - moveStartX;
-        const dy = t.clientY - moveStartY;
-        const dist = Math.min(60, Math.sqrt(dx*dx + dy*dy));
-        const angle = Math.atan2(dy, dx);
-        
-        joyKnob.style.transform = `translate(calc(-50% + ${Math.cos(angle)*dist}px), calc(-50% + ${Math.sin(angle)*dist}px))`;
-        
-        const normX = (Math.cos(angle)*dist) / 60;
-        const normY = (Math.sin(angle)*dist) / 60;
-        
-        keys.w = normY < -0.2;
-        keys.s = normY > 0.2;
-        keys.a = normX < -0.2;
-        keys.d = normX > 0.2;
-      }
-    }
-  }, { passive: false });
-
-  const endMoveTouch = e => {
-    e.preventDefault();
-    for (let i=0; i<e.changedTouches.length; i++) {
-      if (e.changedTouches[i].identifier === moveTouchId) {
-        moveTouchId = null;
-        joyBase.style.display = 'none';
-        keys.w = keys.s = keys.a = keys.d = false;
-      }
-    }
-  };
-  touchMoveZone.addEventListener('touchend', endMoveTouch, { passive: false });
-  touchMoveZone.addEventListener('touchcancel', endMoveTouch, { passive: false });
-}
-
-if (touchLookZone) {
-  touchLookZone.addEventListener('touchstart', e => {
-    e.preventDefault();
-    window.isMobile = true;
-    if (instructionsEl) instructionsEl.style.display = 'none';
-    if (lookTouchId !== null) return;
-    const t = e.changedTouches[0];
-    lookTouchId = t.identifier;
-    lastLookX = t.clientX;
-    lastLookY = t.clientY;
-  }, { passive: false });
-
-  touchLookZone.addEventListener('touchmove', e => {
-    e.preventDefault();
-    if (lookTouchId === null) return;
-    for (let i=0; i<e.changedTouches.length; i++) {
-      const t = e.changedTouches[i];
-      if (t.identifier === lookTouchId) {
-        const dx = t.clientX - lastLookX;
-        const dy = t.clientY - lastLookY;
-        lastLookX = t.clientX;
-        lastLookY = t.clientY;
-        
-        yaw -= dx * GAME_PARAMS.camera.mouseSensitivity * 1.5;
-        pitch -= dy * GAME_PARAMS.camera.mouseSensitivity * 1.5;
-        pitch = Math.max(
-          -Math.PI / 2 + GAME_PARAMS.camera.pitchLimitPadding,
-          Math.min(Math.PI / 2 - GAME_PARAMS.camera.pitchLimitPadding, pitch)
-        );
-        
-        if (Math.abs(dx) > 0.1 || Math.abs(dy) > 0.1) {
-          isMouseMoving = true;
-          mouseMoveTimer = 0.1;
-        }
-      }
-    }
-  }, { passive: false });
-
-  const endLookTouch = e => {
-    e.preventDefault();
-    for (let i=0; i<e.changedTouches.length; i++) {
-      if (e.changedTouches[i].identifier === lookTouchId) {
-        lookTouchId = null;
-      }
-    }
-  };
-  touchLookZone.addEventListener('touchend', endLookTouch, { passive: false });
-  touchLookZone.addEventListener('touchcancel', endLookTouch, { passive: false });
-}
-
-// Mobile Action Buttons
-const btnJetpack = document.getElementById('btn-jetpack');
-if (btnJetpack) {
-  btnJetpack.addEventListener('touchstart', e => { e.preventDefault(); window.isMobile=true; keys.space = true; }, { passive: false });
-  btnJetpack.addEventListener('touchend', e => { e.preventDefault(); keys.space = false; }, { passive: false });
-  btnJetpack.addEventListener('touchcancel', e => { e.preventDefault(); keys.space = false; }, { passive: false });
-}
-
-const btnShield = document.getElementById('btn-shield');
-if (btnShield) {
-  btnShield.addEventListener('touchstart', e => {
-    e.preventDefault();
-    window.isMobile = true;
-    shieldActive = !shieldActive;
-    if (shieldActive) setShieldReveal(1.0);
-    if (sfx.shield && sfx.shield.buffer) {
-      if (sfx.shield.isPlaying) sfx.shield.stop();
-      sfx.shield.play();
-    }
-  }, { passive: false });
-}
-
-const btnMenu = document.getElementById('btn-menu');
-if (btnMenu) {
-  btnMenu.addEventListener('touchstart', e => {
-    e.preventDefault();
-    window.isMobile = true;
-    const panel = document.getElementById('control-panel');
-    if (panel) {
-      panel.classList.toggle('is-collapsed');
-      const btn = panel.querySelector('[data-action="toggle"]');
-      if (btn) btn.textContent = panel.classList.contains('is-collapsed') ? 'Show' : 'Hide';
-    }
-  }, { passive: false });
-}
-
-const btnFire = document.getElementById('btn-fire');
-let mobileFireDownTime = null;
-if (btnFire) {
-  btnFire.addEventListener('touchstart', e => {
-    e.preventDefault();
-    window.isMobile = true;
-    mobileFireDownTime = clock.getElapsedTime();
-    isCharging = false;
-    chargeT = 0;
-    rapidFireTimer = 0;
-  }, { passive: false });
-  btnFire.addEventListener('touchend', e => {
-    e.preventDefault();
-    if (mobileFireDownTime === null) return;
-    const held = clock.getElapsedTime() - mobileFireDownTime;
-    if (held >= GAME_PARAMS.combat.chargeThreshold) {
-      const t = Math.min(held / GAME_PARAMS.combat.maxChargeTime, 1.0);
-      spawnProjectile(t);
-    } else {
-      spawnProjectile(0); // Fire a rapid shot if they tapped quickly
-    }
-    mobileFireDownTime = null;
-    isCharging = false;
-    chargeT = 0;
-    if (sfx.charge && sfx.charge.isPlaying) sfx.charge.stop();
-    camera.fov = GAME_PARAMS.camera.baseFOV;
-    camera.updateProjectionMatrix();
-    if (chargeLight) chargeLight.intensity = 0;
-    if (chargeBar) chargeBar.style.display = 'none';
-  }, { passive: false });
-}
