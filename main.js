@@ -403,6 +403,7 @@ document.addEventListener('keyup', e => {
 // ─── Pointer lock ─────────────────────────────────────────────────────────
 const chargeBar = document.getElementById('charge-bar');
 const chargeFill = document.getElementById('charge-fill');
+window.isMobile = false;
 let isLocked = false;
 let isTeleporting = false;
 const instructions = document.getElementById('instructions');
@@ -651,7 +652,7 @@ let isCharging = false;
 let chargeT = 0;
 
 window.addEventListener('mousedown', e => {
-  if (e.button !== 0 || !isLocked) return;
+  if (e.button !== 0 || (!isLocked && !window.isMobile)) return;
   mouseDownTime = clock.getElapsedTime();
   isCharging = false;
   chargeT = 0;
@@ -659,7 +660,7 @@ window.addEventListener('mousedown', e => {
 });
 
 window.addEventListener('mouseup', e => {
-  if (e.button !== 0 || !isLocked || mouseDownTime === null) return;
+  if (e.button !== 0 || (!isLocked && !window.isMobile) || mouseDownTime === null) return;
   const held = clock.getElapsedTime() - mouseDownTime;
   if (held >= GAME_PARAMS.combat.chargeThreshold) {
     const t = Math.min(held / GAME_PARAMS.combat.maxChargeTime, 1.0);
@@ -1906,3 +1907,188 @@ function animate() {
 }
 
 animate();
+
+// ─── Mobile Touch Controls ────────────────────────────────────────────────
+const touchMoveZone = document.getElementById('touch-zone-move');
+const touchLookZone = document.getElementById('touch-zone-look');
+const joyBase = document.getElementById('joystick-base');
+const joyKnob = document.getElementById('joystick-knob');
+const instructionsEl = document.getElementById('instructions');
+
+let moveTouchId = null;
+let lookTouchId = null;
+let moveStartX = 0, moveStartY = 0;
+let lastLookX = 0, lastLookY = 0;
+
+if (touchMoveZone) {
+  touchMoveZone.addEventListener('touchstart', e => {
+    e.preventDefault();
+    window.isMobile = true;
+    if (instructionsEl) instructionsEl.style.display = 'none';
+    if (moveTouchId !== null) return;
+    const t = e.changedTouches[0];
+    moveTouchId = t.identifier;
+    moveStartX = t.clientX;
+    moveStartY = t.clientY;
+    joyBase.style.display = 'block';
+    joyBase.style.left = moveStartX + 'px';
+    joyBase.style.top = moveStartY + 'px';
+    joyKnob.style.transform = 'translate(-50%, -50%)';
+    keys.w = keys.s = keys.a = keys.d = false;
+  }, { passive: false });
+
+  touchMoveZone.addEventListener('touchmove', e => {
+    e.preventDefault();
+    if (moveTouchId === null) return;
+    for (let i=0; i<e.changedTouches.length; i++) {
+      const t = e.changedTouches[i];
+      if (t.identifier === moveTouchId) {
+        const dx = t.clientX - moveStartX;
+        const dy = t.clientY - moveStartY;
+        const dist = Math.min(60, Math.sqrt(dx*dx + dy*dy));
+        const angle = Math.atan2(dy, dx);
+        
+        joyKnob.style.transform = `translate(calc(-50% + ${Math.cos(angle)*dist}px), calc(-50% + ${Math.sin(angle)*dist}px))`;
+        
+        const normX = (Math.cos(angle)*dist) / 60;
+        const normY = (Math.sin(angle)*dist) / 60;
+        
+        keys.w = normY < -0.2;
+        keys.s = normY > 0.2;
+        keys.a = normX < -0.2;
+        keys.d = normX > 0.2;
+      }
+    }
+  }, { passive: false });
+
+  const endMoveTouch = e => {
+    e.preventDefault();
+    for (let i=0; i<e.changedTouches.length; i++) {
+      if (e.changedTouches[i].identifier === moveTouchId) {
+        moveTouchId = null;
+        joyBase.style.display = 'none';
+        keys.w = keys.s = keys.a = keys.d = false;
+      }
+    }
+  };
+  touchMoveZone.addEventListener('touchend', endMoveTouch, { passive: false });
+  touchMoveZone.addEventListener('touchcancel', endMoveTouch, { passive: false });
+}
+
+if (touchLookZone) {
+  touchLookZone.addEventListener('touchstart', e => {
+    e.preventDefault();
+    window.isMobile = true;
+    if (instructionsEl) instructionsEl.style.display = 'none';
+    if (lookTouchId !== null) return;
+    const t = e.changedTouches[0];
+    lookTouchId = t.identifier;
+    lastLookX = t.clientX;
+    lastLookY = t.clientY;
+  }, { passive: false });
+
+  touchLookZone.addEventListener('touchmove', e => {
+    e.preventDefault();
+    if (lookTouchId === null) return;
+    for (let i=0; i<e.changedTouches.length; i++) {
+      const t = e.changedTouches[i];
+      if (t.identifier === lookTouchId) {
+        const dx = t.clientX - lastLookX;
+        const dy = t.clientY - lastLookY;
+        lastLookX = t.clientX;
+        lastLookY = t.clientY;
+        
+        yaw -= dx * GAME_PARAMS.camera.mouseSensitivity * 1.5;
+        pitch -= dy * GAME_PARAMS.camera.mouseSensitivity * 1.5;
+        pitch = Math.max(
+          -Math.PI / 2 + GAME_PARAMS.camera.pitchLimitPadding,
+          Math.min(Math.PI / 2 - GAME_PARAMS.camera.pitchLimitPadding, pitch)
+        );
+        
+        if (Math.abs(dx) > 0.1 || Math.abs(dy) > 0.1) {
+          isMouseMoving = true;
+          mouseMoveTimer = 0.1;
+        }
+      }
+    }
+  }, { passive: false });
+
+  const endLookTouch = e => {
+    e.preventDefault();
+    for (let i=0; i<e.changedTouches.length; i++) {
+      if (e.changedTouches[i].identifier === lookTouchId) {
+        lookTouchId = null;
+      }
+    }
+  };
+  touchLookZone.addEventListener('touchend', endLookTouch, { passive: false });
+  touchLookZone.addEventListener('touchcancel', endLookTouch, { passive: false });
+}
+
+// Mobile Action Buttons
+const btnJetpack = document.getElementById('btn-jetpack');
+if (btnJetpack) {
+  btnJetpack.addEventListener('touchstart', e => { e.preventDefault(); window.isMobile=true; keys.space = true; }, { passive: false });
+  btnJetpack.addEventListener('touchend', e => { e.preventDefault(); keys.space = false; }, { passive: false });
+  btnJetpack.addEventListener('touchcancel', e => { e.preventDefault(); keys.space = false; }, { passive: false });
+}
+
+const btnShield = document.getElementById('btn-shield');
+if (btnShield) {
+  btnShield.addEventListener('touchstart', e => {
+    e.preventDefault();
+    window.isMobile = true;
+    shieldActive = !shieldActive;
+    if (shieldActive) setShieldReveal(1.0);
+    if (sfx.shield && sfx.shield.buffer) {
+      if (sfx.shield.isPlaying) sfx.shield.stop();
+      sfx.shield.play();
+    }
+  }, { passive: false });
+}
+
+const btnMenu = document.getElementById('btn-menu');
+if (btnMenu) {
+  btnMenu.addEventListener('touchstart', e => {
+    e.preventDefault();
+    window.isMobile = true;
+    const panel = document.getElementById('control-panel');
+    if (panel) {
+      panel.classList.toggle('is-collapsed');
+      const btn = panel.querySelector('[data-action="toggle"]');
+      if (btn) btn.textContent = panel.classList.contains('is-collapsed') ? 'Show' : 'Hide';
+    }
+  }, { passive: false });
+}
+
+const btnFire = document.getElementById('btn-fire');
+let mobileFireDownTime = null;
+if (btnFire) {
+  btnFire.addEventListener('touchstart', e => {
+    e.preventDefault();
+    window.isMobile = true;
+    mobileFireDownTime = clock.getElapsedTime();
+    isCharging = false;
+    chargeT = 0;
+    rapidFireTimer = 0;
+  }, { passive: false });
+  btnFire.addEventListener('touchend', e => {
+    e.preventDefault();
+    if (mobileFireDownTime === null) return;
+    const held = clock.getElapsedTime() - mobileFireDownTime;
+    if (held >= GAME_PARAMS.combat.chargeThreshold) {
+      const t = Math.min(held / GAME_PARAMS.combat.maxChargeTime, 1.0);
+      spawnProjectile(t);
+    } else {
+      spawnProjectile(0); // Fire a rapid shot if they tapped quickly
+    }
+    mobileFireDownTime = null;
+    isCharging = false;
+    chargeT = 0;
+    if (sfx.charge && sfx.charge.isPlaying) sfx.charge.stop();
+    camera.fov = GAME_PARAMS.camera.baseFOV;
+    camera.updateProjectionMatrix();
+    if (chargeLight) chargeLight.intensity = 0;
+    if (chargeBar) chargeBar.style.display = 'none';
+  }, { passive: false });
+}
